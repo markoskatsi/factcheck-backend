@@ -46,10 +46,10 @@ const buildClaimsSelectSql = (id, variant) => {
     "ClaimTitle",
     "ClaimDescription",
     "ClaimPublished",
-    "ClaimUserID",
-    "CONCAT(Users.UserFirstname, ' ', Users.UserLastname) AS ClaimUserName",
-    "ClaimClaimstatusID",
     "ClaimstatusName",
+    "CONCAT(Users.UserFirstname, ' ', Users.UserLastname) AS ClaimUserName",
+    "ClaimUserID",
+    "ClaimClaimstatusID",
   ];
 
   switch (variant) {
@@ -59,6 +59,32 @@ const buildClaimsSelectSql = (id, variant) => {
     default:
       sql = `SELECT ${fields} FROM ${table}`;
       if (id) sql += ` WHERE ClaimID = ${id}`;
+  }
+
+  return sql;
+};
+
+const buildSourcesSelectSql = (id, variant) => {
+  let sql = "";
+  const table =
+    "Sources INNER JOIN Claims ON Sources.SourceClaimID=Claims.ClaimID INNER JOIN Sourcetypes ON Sources.SourceSourcetypeID=Sourcetypes.SourcetypeID";
+  const fields = [
+    "SourceID",
+    "SourcetypeName",
+    "SourceDescription",
+    "SourceURL",
+    "ClaimDescription",
+    "SourceClaimID",
+    "SourceSourcetypeID",
+  ];
+
+  switch (variant) {
+    case "claims":
+      sql = `SELECT ${fields} FROM ${table} WHERE SourceClaimID = ${id}`;
+      break;
+    default:
+      sql = `SELECT ${fields} FROM ${table}`;
+      if (id) sql += ` WHERE SourceID = ${id}`;
   }
 
   return sql;
@@ -75,6 +101,17 @@ const getClaimsController = async (res, id, variant) => {
   res.status(200).json(result);
 };
 
+const getSourcesController = async (res, id, variant) => {
+  // Validate request
+
+  // Access database
+  const sql = buildSourcesSelectSql(id, variant);
+  const { isSuccess, result, message } = await read(sql);
+  if (!isSuccess) return res.status(400).json({ message });
+  // Response to request
+  res.status(200).json(result);
+};
+
 // Endpoints ------------------------------
 // Claims
 app.get("/api/claims", (req, res) => getClaimsController(res, null, null));
@@ -83,6 +120,15 @@ app.get("/api/claims/:id", (req, res) =>
 );
 app.get("/api/claims/users/:id", (req, res) =>
   getClaimsController(res, req.params.id, "users")
+);
+
+// Sources
+app.get("/api/sources", (req, res) => getSourcesController(res, null, null));
+app.get("/api/sources/:id", (req, res) =>
+  getSourcesController(res, req.params.id, null)
+);
+app.get("/api/sources/claims/:id", (req, res) =>
+  getSourcesController(res, req.params.id, "claims")
 );
 
 // Start server ----------------------------
