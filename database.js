@@ -4,18 +4,18 @@ import mysql from "mysql2/promise";
 // Database connection -------------------
 
 const dbConfig = {
-  database: process.env.DB_NAME || "factcheck",
-  port: process.env.DB_PORT || 3306,
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PSWD || "",
-  namedPlaceholders: true,
+  host: process.env.MYSQLHOST || "localhost",
+  user: process.env.MYSQLUSER || "root",
+  password: process.env.MYSQLPASSWORD || "",
+  database: process.env.MYSQLDATABASE || "factcheck",
+  port: process.env.MYSQLPORT || 3306,
 };
 
 let database = null;
 
 try {
   database = await mysql.createConnection(dbConfig);
+  console.log("Database connection created successfully.");
 } catch (error) {
   console.log("Error creating database connection: " + error.message);
   process.exit();
