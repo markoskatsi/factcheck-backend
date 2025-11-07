@@ -14,7 +14,7 @@ const dbConfig = {
 let database = null;
 
 try {
-  database = await mysql.createConnection(dbConfig);
+  database = await mysql.createPool(dbConfig);
   console.log("Database connection created successfully.");
 } catch (error) {
   console.log("Error creating database connection: " + error.message);
