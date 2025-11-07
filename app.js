@@ -22,6 +22,33 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Controllers ------------------------------
+const createClaim = async (sql, record) => {
+  try {
+    const status = await database.query(sql, record);
+    const recoverRecordSql = buildClaimsSelectSql(status[0].insertId, null);
+
+    const { isSuccess, result, message } = await read(recoverRecordSql);
+
+    return isSuccess
+      ? {
+          isSuccess: true,
+          result: result,
+          message: "Record successfully recovered",
+        }
+      : {
+          isSuccess: false,
+          result: null,
+          message: `Failed to recover the inserted record: ${message}`,
+        };
+  } catch (error) {
+    return {
+      isSuccess: false,
+      result: null,
+      message: `Failed to execute query: ${error.message}`,
+    };
+  }
+};
+
 const read = async (selectSql) => {
   try {
     const [result] = await database.query(selectSql);
@@ -35,6 +62,26 @@ const read = async (selectSql) => {
       message: `Failed to execute query: ${error.message}`,
     };
   }
+};
+
+const buildSetField = (fields) =>
+  fields.reduce(
+    (setSQL, field, index) =>
+      setSQL + `${field}=:${field}` + (index === fields.length - 1 ? "" : ", "),
+    "SET "
+  );
+
+const buildClaimsInsertSql = (record) => {
+  const table = "Claims";
+  const mutableFields = [
+    "ClaimTitle",
+    "ClaimDescription",
+    "ClaimPublished",
+    "ClaimUserID",
+    "ClaimClaimstatusID",
+  ];
+
+  return `INSERT INTO ${table}` + buildSetField(mutableFields);
 };
 
 const buildClaimsSelectSql = (id, variant) => {
@@ -101,6 +148,17 @@ const getClaimsController = async (res, id, variant) => {
   res.status(200).json(result);
 };
 
+const postClaimsController = async (req, res) => {
+  // Validate request
+
+  // Access database
+  const sql = buildClaimsInsertSql(req.body);
+  const { isSuccess, result, message } = await createClaim(sql, req.body);
+  if (!isSuccess) return res.status(404).json({ message });
+  // Response to request
+  res.status(201).json(result);
+};
+
 const getSourcesController = async (res, id, variant) => {
   // Validate request
 
@@ -121,6 +179,8 @@ app.get("/api/claims/:id", (req, res) =>
 app.get("/api/claims/users/:id", (req, res) =>
   getClaimsController(res, req.params.id, "users")
 );
+
+app.post("/api/claims", postClaimsController);
 
 // Sources
 app.get("/api/sources", (req, res) => getSourcesController(res, null, null));
