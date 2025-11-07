@@ -9,6 +9,7 @@ const dbConfig = {
   password: process.env.MYSQLPASSWORD || "",
   database: process.env.MYSQLDATABASE || "factcheck",
   port: process.env.MYSQLPORT || 3306,
+  namedPlaceholders: true
 };
 
 let database = null;

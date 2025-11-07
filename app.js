@@ -48,6 +48,32 @@ const createClaim = async (sql, record) => {
     };
   }
 };
+const createSource = async (sql, record) => {
+  try {
+    const status = await database.query(sql, record);
+    const recoverRecordSql = buildSourcesSelectSql(status[0].insertId, null);
+
+    const { isSuccess, result, message } = await read(recoverRecordSql);
+
+    return isSuccess
+      ? {
+          isSuccess: true,
+          result: result,
+          message: "Record successfully recovered",
+        }
+      : {
+          isSuccess: false,
+          result: null,
+          message: `Failed to recover the inserted record: ${message}`,
+        };
+  } catch (error) {
+    return {
+      isSuccess: false,
+      result: null,
+      message: `Failed to execute query: ${error.message}`,
+    };
+  }
+};
 
 const read = async (selectSql) => {
   try {
@@ -68,7 +94,7 @@ const buildSetField = (fields) =>
   fields.reduce(
     (setSQL, field, index) =>
       setSQL + `${field}=:${field}` + (index === fields.length - 1 ? "" : ", "),
-    "SET "
+    " SET "
   );
 
 const buildClaimsInsertSql = (record) => {
@@ -81,6 +107,20 @@ const buildClaimsInsertSql = (record) => {
     "ClaimClaimstatusID",
   ];
 
+  console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields))
+  return `INSERT INTO ${table}` + buildSetField(mutableFields);
+};
+
+const buildSourcesInsertSql = (record) => {
+  const table = "Sources";
+  const mutableFields = [
+    "SourceDescription",
+    "SourceURL",
+    "SourceClaimID",
+    "SourceSourcetypeID",
+  ];
+
+  console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields))
   return `INSERT INTO ${table}` + buildSetField(mutableFields);
 };
 
@@ -170,6 +210,17 @@ const getSourcesController = async (res, id, variant) => {
   res.status(200).json(result);
 };
 
+const postSourcesController = async (req, res) => {
+  // Validate request
+
+  // Access database
+  const sql = buildSourcesInsertSql(req.body);
+  const { isSuccess, result, message } = await createSource(sql, req.body);
+  if (!isSuccess) return res.status(404).json({ message });
+  // Response to request
+  res.status(201).json(result);
+};
+
 // Endpoints ------------------------------
 // Claims
 app.get("/api/claims", (req, res) => getClaimsController(res, null, null));
@@ -190,6 +241,8 @@ app.get("/api/sources/:id", (req, res) =>
 app.get("/api/sources/claims/:id", (req, res) =>
   getSourcesController(res, req.params.id, "claims")
 );
+
+app.post("/api/sources", postSourcesController);
 
 // Start server ----------------------------
 const PORT = process.env.PORT || 5000;
