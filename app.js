@@ -107,7 +107,7 @@ const buildClaimsInsertSql = (record) => {
     "ClaimClaimstatusID",
   ];
 
-  console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields))
+  console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields));
   return `INSERT INTO ${table}` + buildSetField(mutableFields);
 };
 
@@ -121,7 +121,7 @@ const buildSourcesInsertSql = (record) => {
     "SourceSourcetypeID",
   ];
 
-  console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields))
+  console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields));
   return `INSERT INTO ${table}` + buildSetField(mutableFields);
 };
 
@@ -148,6 +148,17 @@ const buildClaimsSelectSql = (id, variant) => {
       sql = `SELECT ${fields} FROM ${table}`;
       if (id) sql += ` WHERE ClaimID = ${id}`;
   }
+
+  return sql;
+};
+
+const buildSourcetypesSelectSql = (id, variant) => {
+  let sql = "";
+  const table = "Sourcetypes";
+  const fields = ["SourcetypeID", "SourcetypeName", "SourcetypeDescription"];
+
+  sql = `SELECT ${fields} FROM ${table}`;
+  if (id) sql += ` WHERE SourcetypeID = ${id}`;
 
   return sql;
 };
@@ -184,6 +195,16 @@ const getClaimsController = async (res, id, variant) => {
 
   // Access database
   const sql = buildClaimsSelectSql(id, variant);
+  const { isSuccess, result, message } = await read(sql);
+  if (!isSuccess) return res.status(400).json({ message });
+  // Response to request
+  res.status(200).json(result);
+};
+
+const getSourcetypesController = async (res, id, variant) => {
+  // Validate request
+  // Access database
+  const sql = buildSourcetypesSelectSql(id, variant);
   const { isSuccess, result, message } = await read(sql);
   if (!isSuccess) return res.status(400).json({ message });
   // Response to request
@@ -246,6 +267,9 @@ app.get("/api/sources/claims/:id", (req, res) =>
 
 app.post("/api/sources", postSourcesController);
 
+app.get("/api/sourcetypes", (req, res) =>
+  getSourcetypesController(res, null, null)
+);
 // Start server ----------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
