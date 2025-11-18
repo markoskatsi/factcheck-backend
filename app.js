@@ -102,7 +102,6 @@ const buildClaimsInsertSql = (record) => {
   const mutableFields = [
     "ClaimTitle",
     "ClaimDescription",
-    "ClaimCreated",
     "ClaimUserID",
     "ClaimClaimstatusID",
   ];
@@ -116,7 +115,6 @@ const buildSourcesInsertSql = (record) => {
   const mutableFields = [
     "SourceDescription",
     "SourceURL",
-    "SourceCreated",
     "SourceClaimID",
     "SourceSourcetypeID",
   ];
