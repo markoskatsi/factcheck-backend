@@ -102,7 +102,7 @@ const buildClaimsInsertSql = (record) => {
   const mutableFields = [
     "ClaimTitle",
     "ClaimDescription",
-    "ClaimPublished",
+    "ClaimCreated",
     "ClaimUserID",
     "ClaimClaimstatusID",
   ];
@@ -116,6 +116,7 @@ const buildSourcesInsertSql = (record) => {
   const mutableFields = [
     "SourceDescription",
     "SourceURL",
+    "SourceCreated",
     "SourceClaimID",
     "SourceSourcetypeID",
   ];
@@ -132,7 +133,7 @@ const buildClaimsSelectSql = (id, variant) => {
     "ClaimID",
     "ClaimTitle",
     "ClaimDescription",
-    "ClaimPublished",
+    "ClaimCreated",
     "ClaimstatusName",
     "CONCAT(Users.UserFirstname, ' ', Users.UserLastname) AS ClaimUserName",
     "ClaimUserID",
@@ -160,6 +161,7 @@ const buildSourcesSelectSql = (id, variant) => {
     "SourcetypeName",
     "SourceDescription",
     "SourceURL",
+    "SourceCreated",
     "ClaimDescription",
     "SourceClaimID",
     "SourceSourcetypeID",
