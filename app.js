@@ -1,10 +1,24 @@
 // Imports ---------------------------------
+import 'dotenv/config';
 import express from "express";
 import database from "./database.js";
 import cors from "cors";
+import multer from "multer";
 
-// Configure express app -------------------
+// Configure express app and multer-------------------
 const app = express();
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+  const uniqueName = Date.now() + '-' + file.originalname;
+  cb(null, uniqueName);
+}
+});
+
+const upload = multer({ storage });
 
 // Configure middleware ---------------------
 app.use(function (req, res, next) {
@@ -117,6 +131,10 @@ const buildSourcesInsertSql = (record) => {
     "SourceURL",
     "SourceClaimID",
     "SourceSourcetypeID",
+    "SourceFilename",
+    "SourceFilepath",
+    "SourceFiletype",
+    "SourceFilesize",
   ];
 
   console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields));
@@ -174,6 +192,10 @@ const buildSourcesSelectSql = (id, variant) => {
     "ClaimDescription",
     "SourceClaimID",
     "SourceSourcetypeID",
+    "SourceFilename",
+    "SourceFilepath",
+    "SourceFiletype",
+    "SourceFilesize",
   ];
 
   switch (variant) {
@@ -233,6 +255,12 @@ const getSourcesController = async (res, id, variant) => {
 
 const postSourcesController = async (req, res) => {
   // Validate request
+  if (req.file) {
+    req.body.SourceFilename = req.file.originalname;
+    req.body.SourceFilepath = `/uploads/${req.file.filename}`;
+    req.body.SourceFiletype = req.file.mimetype;
+    req.body.SourceFilesize = req.file.size;
+  }
 
   // Access database
   const sql = buildSourcesInsertSql(req.body);
@@ -263,7 +291,7 @@ app.get("/api/sources/claims/:id", (req, res) =>
   getSourcesController(res, req.params.id, "claims")
 );
 
-app.post("/api/sources", postSourcesController);
+app.post("/api/sources", upload.single("file"), postSourcesController);
 
 app.get("/api/sourcetypes", (req, res) =>
   getSourcetypesController(res, null, null)
