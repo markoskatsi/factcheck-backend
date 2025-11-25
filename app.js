@@ -158,11 +158,12 @@ const buildClaimsSelectSql = (id, variant) => {
 
   switch (variant) {
     case "users":
-      sql = `SELECT ${fields} FROM ${table} WHERE Claims.ClaimUserID = ${id}`;
+      sql = `SELECT ${fields} FROM ${table} WHERE Claims.ClaimUserID = ${id} ORDER BY ClaimCreated DESC`;
       break;
     default:
       sql = `SELECT ${fields} FROM ${table}`;
       if (id) sql += ` WHERE ClaimID = ${id}`;
+      sql += ` ORDER BY ClaimCreated DESC`;
   }
 
   return sql;
@@ -200,10 +201,10 @@ const buildSourcesSelectSql = (id, variant) => {
 
   switch (variant) {
     case "claims":
-      sql = `SELECT ${fields} FROM ${table} WHERE SourceClaimID = ${id}`;
+      sql = `SELECT ${fields} FROM ${table} WHERE SourceClaimID = ${id} ORDER BY SourceCreated DESC`;
       break;
     default:
-      sql = `SELECT ${fields} FROM ${table}`;
+      sql = `SELECT ${fields} FROM ${table} ORDER BY SourceCreated DESC`;
       if (id) sql += ` WHERE SourceID = ${id}`;
   }
 
