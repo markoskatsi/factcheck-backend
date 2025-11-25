@@ -233,18 +233,6 @@ const getSourcetypesController = async (res, id, variant) => {
 
 const postClaimsController = async (req, res) => {
   // Validate request
-  if (req.file) {
-    req.body.SourceFilename = req.file.originalname;
-    req.body.SourceFilepath = req.file.path;
-    req.body.SourceFiletype = req.file.mimetype;
-    req.body.SourceFilesize = req.file.size;
-    req.body.SourceURL = null;
-  } else {
-    req.body.SourceFilename = null;
-    req.body.SourceFilepath = null;
-    req.body.SourceFiletype = null;
-    req.body.SourceFilesize = null;
-  }
 
   // Access database
   const sql = buildClaimsInsertSql(req.body);
