@@ -1,5 +1,5 @@
 // Imports ---------------------------------
-import 'dotenv/config';
+import "dotenv/config";
 import express from "express";
 import database from "./database.js";
 import cors from "cors";
@@ -13,9 +13,9 @@ const storage = multer.diskStorage({
     cb(null, "uploads/");
   },
   filename: (req, file, cb) => {
-  const uniqueName = Date.now() + '-' + file.originalname;
-  cb(null, uniqueName);
-}
+    const uniqueName = Date.now() + "-" + file.originalname;
+    cb(null, uniqueName);
+  },
 });
 
 const upload = multer({ storage });
@@ -187,11 +187,11 @@ const buildSourcesSelectSql = (id, variant) => {
     "SourceID",
     "SourcetypeName",
     "SourceDescription",
-    "SourceURL",
     "SourceCreated",
     "ClaimDescription",
     "SourceClaimID",
     "SourceSourcetypeID",
+    "SourceURL",
     "SourceFilename",
     "SourceFilepath",
     "SourceFiletype",
@@ -233,6 +233,18 @@ const getSourcetypesController = async (res, id, variant) => {
 
 const postClaimsController = async (req, res) => {
   // Validate request
+  if (req.file) {
+    req.body.SourceFilename = req.file.originalname;
+    req.body.SourceFilepath = req.file.path;
+    req.body.SourceFiletype = req.file.mimetype;
+    req.body.SourceFilesize = req.file.size;
+    req.body.SourceURL = null;
+  } else {
+    req.body.SourceFilename = null;
+    req.body.SourceFilepath = null;
+    req.body.SourceFiletype = null;
+    req.body.SourceFilesize = null;
+  }
 
   // Access database
   const sql = buildClaimsInsertSql(req.body);
