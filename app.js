@@ -211,11 +211,33 @@ const buildSourcesSelectSql = (id, variant) => {
   return sql;
 };
 
+const buildUsersSelectSql = (id, variant) => {
+  let sql = "";
+  const table = "Users";
+  const fields = ["UserID", "UserFirstname", "UserLastname", "UserEmail", "UserType"];
+
+  sql = `SELECT ${fields} FROM ${table}`;
+  if (id) sql += ` WHERE UserID = ${id}`;
+
+  return sql;
+};
+
 const getClaimsController = async (res, id, variant) => {
   // Validate request
 
   // Access database
   const sql = buildClaimsSelectSql(id, variant);
+  const { isSuccess, result, message } = await read(sql);
+  if (!isSuccess) return res.status(400).json({ message });
+  // Response to request
+  res.status(200).json(result);
+};
+
+const getUsersController = async (res, id, variant) => {
+  // Validate request
+
+  // Access database
+  const sql = buildUsersSelectSql(id, variant);
   const { isSuccess, result, message } = await read(sql);
   if (!isSuccess) return res.status(400).json({ message });
   // Response to request
@@ -297,6 +319,10 @@ app.post("/api/sources", upload.single("file"), postSourcesController);
 app.get("/api/sourcetypes", (req, res) =>
   getSourcetypesController(res, null, null)
 );
+// Users
+app.get("/api/users", (req, res) => {
+  getUsersController(res, null, null);
+});
 // Start server ----------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
