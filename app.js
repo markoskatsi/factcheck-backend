@@ -204,8 +204,9 @@ const buildSourcesSelectSql = (id, variant) => {
       sql = `SELECT ${fields} FROM ${table} WHERE SourceClaimID = ${id} ORDER BY SourceCreated DESC`;
       break;
     default:
-      sql = `SELECT ${fields} FROM ${table} ORDER BY SourceCreated DESC`;
+      sql = `SELECT ${fields} FROM ${table}`;
       if (id) sql += ` WHERE SourceID = ${id}`;
+      sql += ` ORDER BY SourceCreated DESC`;
   }
 
   return sql;
@@ -214,7 +215,13 @@ const buildSourcesSelectSql = (id, variant) => {
 const buildUsersSelectSql = (id, variant) => {
   let sql = "";
   const table = "Users";
-  const fields = ["UserID", "UserFirstname", "UserLastname", "UserEmail", "UserType"];
+  const fields = [
+    "UserID",
+    "UserFirstname",
+    "UserLastname",
+    "UserEmail",
+    "UserType",
+  ];
 
   sql = `SELECT ${fields} FROM ${table}`;
   if (id) sql += ` WHERE UserID = ${id}`;
