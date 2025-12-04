@@ -160,6 +160,9 @@ const buildClaimsSelectSql = (id, variant) => {
     case "users":
       sql = `SELECT ${fields} FROM ${table} WHERE Claims.ClaimUserID = ${id} ORDER BY ClaimCreated DESC`;
       break;
+      case "claimstatus":
+      sql = `SELECT ${fields} FROM ${table} WHERE Claims.ClaimClaimstatusID = ${id} ORDER BY ClaimCreated DESC`;
+      break;
     default:
       sql = `SELECT ${fields} FROM ${table}`;
       if (id) sql += ` WHERE ClaimID = ${id}`;
@@ -308,6 +311,9 @@ app.get("/api/claims/:id", (req, res) =>
 );
 app.get("/api/claims/users/:id", (req, res) =>
   getClaimsController(res, req.params.id, "users")
+);
+app.get("/api/claims/claimstatus/:id", (req, res) =>
+  getClaimsController(res, req.params.id, "claimstatus")
 );
 
 app.post("/api/claims", postClaimsController);
