@@ -36,9 +36,66 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Controllers ------------------------------
+const deleteClaim = async (sql, id) => {
+  try {
+    const status = await database.query(sql, { ClaimID: id });
+
+    return status[0].affectedRows === 0
+      ? {
+          isSuccess: false,
+          result: null,
+          message: `Failed to delete record: ${id}`,
+        }
+      : {
+          isSuccess: true,
+          result: null,
+          message: "Record successfully deleted",
+        };
+  } catch (error) {
+    return {
+      isSuccess: false,
+      result: null,
+      message: `Failed to execute query: ${error.message}`,
+    };
+  }
+};
+
+const deleteSource = async (sql, id) => {
+  try {
+    const status = await database.query(sql, { SourceID: id });
+
+    return status[0].affectedRows === 0
+      ? {
+          isSuccess: false,
+          result: null,
+          message: `Failed to delete record: ${id}`,
+        }
+      : {
+          isSuccess: true,
+          result: null,
+          message: "Record successfully deleted",
+        };
+  } catch (error) {
+    return {
+      isSuccess: false,
+      result: null,
+      message: `Failed to execute query: ${error.message}`,
+    };
+  }
+};
+
 const updateClaim = async (sql, id, record) => {
   try {
     const status = await database.query(sql, { ...record, ClaimID: id });
+
+    if (status[0].affectedRows === 0) {
+      return {
+        isSuccess: false,
+        result: null,
+        message: `Failed to update record: no rows affected`,
+      };
+    }
+
     const recoverRecordSql = buildClaimsSelectSql(id, null);
 
     const { isSuccess, result, message } = await read(recoverRecordSql);
@@ -66,6 +123,15 @@ const updateClaim = async (sql, id, record) => {
 const updateSource = async (sql, id, record) => {
   try {
     const status = await database.query(sql, { ...record, SourceID: id });
+
+    if (status[0].affectedRows === 0) {
+      return {
+        isSuccess: false,
+        result: null,
+        message: `Failed to update record: no rows affected`,
+      };
+    }
+
     const recoverRecordSql = buildSourcesSelectSql(id, null);
 
     const { isSuccess, result, message } = await read(recoverRecordSql);
@@ -165,6 +231,16 @@ const buildSetField = (fields) =>
     " SET "
   );
 
+const buildClaimsDeleteSql = () => {
+  const table = "Claims";
+  return `DELETE FROM ${table} WHERE ClaimID=:ClaimID`;
+};
+
+const buildSourcesDeleteSql = () => {
+  const table = "Sources";
+  return `DELETE FROM ${table} WHERE SourceID=:SourceID`;
+};
+
 const buildClaimsUpdateSql = () => {
   const table = "Claims";
   const mutableFields = [
@@ -195,7 +271,9 @@ const buildSourcesUpdateSql = () => {
 
   console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields));
   return (
-    `UPDATE ${table}` + buildSetField(mutableFields) + ` WHERE SourceID=:SourceID`
+    `UPDATE ${table}` +
+    buildSetField(mutableFields) +
+    ` WHERE SourceID=:SourceID`
   );
 };
 
@@ -391,6 +469,32 @@ const putSourcesController = async (req, res) => {
   res.status(200).json(result);
 };
 
+const deleteClaimController = async (req, res) => {
+  // Validate request
+  const id = req.params.id;
+
+  // Access database
+  const sql = buildClaimsDeleteSql();
+  const { isSuccess, result, message } = await deleteClaim(sql, id);
+  if (!isSuccess) return res.status(400).json({ message });
+
+  // Response to request
+  res.status(200).json({ message });
+};
+
+const deleteSourceController = async (req, res) => {
+  // Validate request
+  const id = req.params.id;
+
+  // Access database
+  const sql = buildSourcesDeleteSql();
+  const { isSuccess, result, message } = await deleteSource(sql, id);
+  if (!isSuccess) return res.status(400).json({ message });
+
+  // Response to request
+  res.status(200).json({ message });
+};
+
 const getSourcesController = async (res, id, variant) => {
   // Validate request
 
@@ -430,6 +534,7 @@ app.get("/api/claims/users/:id", (req, res) =>
 );
 app.post("/api/claims", postClaimsController);
 app.put("/api/claims/:id", putClaimsController);
+app.delete("/api/claims/:id", deleteClaimController);
 
 // Claimstatus
 app.get("/api/claims/claimstatus/:id", (req, res) =>
@@ -446,6 +551,7 @@ app.get("/api/sources/claims/:id", (req, res) =>
 );
 app.post("/api/sources", upload.single("file"), postSourcesController);
 app.put("/api/sources/:id", putSourcesController);
+app.delete("/api/sources/:id", deleteSourceController);
 
 // Sourcetypes
 app.get("/api/sourcetypes", (req, res) =>
