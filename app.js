@@ -36,6 +36,60 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Controllers ------------------------------
+const updateClaim = async (sql, id, record) => {
+  try {
+    const status = await database.query(sql, { ...record, ClaimID: id });
+    const recoverRecordSql = buildClaimsSelectSql(id, null);
+
+    const { isSuccess, result, message } = await read(recoverRecordSql);
+
+    return isSuccess
+      ? {
+          isSuccess: true,
+          result: result,
+          message: "Record successfully recovered",
+        }
+      : {
+          isSuccess: false,
+          result: null,
+          message: `Failed to recover the updated record: ${message}`,
+        };
+  } catch (error) {
+    return {
+      isSuccess: false,
+      result: null,
+      message: `Failed to execute query: ${error.message}`,
+    };
+  }
+};
+
+const updateSource = async (sql, id, record) => {
+  try {
+    const status = await database.query(sql, { ...record, SourceID: id });
+    const recoverRecordSql = buildSourcesSelectSql(id, null);
+
+    const { isSuccess, result, message } = await read(recoverRecordSql);
+
+    return isSuccess
+      ? {
+          isSuccess: true,
+          result: result,
+          message: "Record successfully recovered",
+        }
+      : {
+          isSuccess: false,
+          result: null,
+          message: `Failed to recover the updated record: ${message}`,
+        };
+  } catch (error) {
+    return {
+      isSuccess: false,
+      result: null,
+      message: `Failed to execute query: ${error.message}`,
+    };
+  }
+};
+
 const createClaim = async (sql, record) => {
   try {
     const status = await database.query(sql, record);
@@ -111,7 +165,41 @@ const buildSetField = (fields) =>
     " SET "
   );
 
-const buildClaimsInsertSql = (record) => {
+const buildClaimsUpdateSql = () => {
+  const table = "Claims";
+  const mutableFields = [
+    "ClaimTitle",
+    "ClaimDescription",
+    "ClaimUserID",
+    "ClaimClaimstatusID",
+  ];
+
+  console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields));
+  return (
+    `UPDATE ${table}` + buildSetField(mutableFields) + ` WHERE ClaimID=:ClaimID`
+  );
+};
+
+const buildSourcesUpdateSql = () => {
+  const table = "Sources";
+  const mutableFields = [
+    "SourceDescription",
+    "SourceURL",
+    "SourceClaimID",
+    "SourceSourcetypeID",
+    "SourceFilename",
+    "SourceFilepath",
+    "SourceFiletype",
+    "SourceFilesize",
+  ];
+
+  console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields));
+  return (
+    `UPDATE ${table}` + buildSetField(mutableFields) + ` WHERE SourceID=:SourceID`
+  );
+};
+
+const buildClaimsInsertSql = () => {
   const table = "Claims";
   const mutableFields = [
     "ClaimTitle",
@@ -124,7 +212,7 @@ const buildClaimsInsertSql = (record) => {
   return `INSERT INTO ${table}` + buildSetField(mutableFields);
 };
 
-const buildSourcesInsertSql = (record) => {
+const buildSourcesInsertSql = () => {
   const table = "Sources";
   const mutableFields = [
     "SourceDescription",
@@ -160,7 +248,7 @@ const buildClaimsSelectSql = (id, variant) => {
     case "users":
       sql = `SELECT ${fields} FROM ${table} WHERE Claims.ClaimUserID = ${id} ORDER BY ClaimCreated DESC`;
       break;
-      case "claimstatus":
+    case "claimstatus":
       sql = `SELECT ${fields} FROM ${table} WHERE Claims.ClaimClaimstatusID = ${id} ORDER BY ClaimCreated DESC`;
       break;
     default:
@@ -172,7 +260,7 @@ const buildClaimsSelectSql = (id, variant) => {
   return sql;
 };
 
-const buildSourcetypesSelectSql = (id, variant) => {
+const buildSourcetypesSelectSql = (id) => {
   let sql = "";
   const table = "Sourcetypes";
   const fields = ["SourcetypeID", "SourcetypeName", "SourcetypeDescription"];
@@ -215,7 +303,7 @@ const buildSourcesSelectSql = (id, variant) => {
   return sql;
 };
 
-const buildUsersSelectSql = (id, variant) => {
+const buildUsersSelectSql = (id) => {
   let sql = "";
   const table = "Users";
   const fields = [
@@ -268,11 +356,39 @@ const postClaimsController = async (req, res) => {
   // Validate request
 
   // Access database
-  const sql = buildClaimsInsertSql(req.body);
+  const sql = buildClaimsInsertSql();
   const { isSuccess, result, message } = await createClaim(sql, req.body);
   if (!isSuccess) return res.status(404).json({ message });
   // Response to request
   res.status(201).json(result);
+};
+
+const putClaimsController = async (req, res) => {
+  // Validate request
+  const id = req.params.id;
+  const record = req.body;
+
+  // Access database
+  const sql = buildClaimsUpdateSql();
+  const { isSuccess, result, message } = await updateClaim(sql, id, record);
+  if (!isSuccess) return res.status(400).json({ message });
+
+  // Response to request
+  res.status(200).json(result);
+};
+
+const putSourcesController = async (req, res) => {
+  // Validate request
+  const id = req.params.id;
+  const record = req.body;
+
+  // Access database
+  const sql = buildSourcesUpdateSql();
+  const { isSuccess, result, message } = await updateSource(sql, id, record);
+  if (!isSuccess) return res.status(400).json({ message });
+
+  // Response to request
+  res.status(200).json(result);
 };
 
 const getSourcesController = async (res, id, variant) => {
@@ -296,7 +412,7 @@ const postSourcesController = async (req, res) => {
   }
 
   // Access database
-  const sql = buildSourcesInsertSql(req.body);
+  const sql = buildSourcesInsertSql();
   const { isSuccess, result, message } = await createSource(sql, req.body);
   if (!isSuccess) return res.status(404).json({ message });
   // Response to request
@@ -312,11 +428,13 @@ app.get("/api/claims/:id", (req, res) =>
 app.get("/api/claims/users/:id", (req, res) =>
   getClaimsController(res, req.params.id, "users")
 );
+app.post("/api/claims", postClaimsController);
+app.put("/api/claims/:id", putClaimsController);
+
+// Claimstatus
 app.get("/api/claims/claimstatus/:id", (req, res) =>
   getClaimsController(res, req.params.id, "claimstatus")
 );
-
-app.post("/api/claims", postClaimsController);
 
 // Sources
 app.get("/api/sources", (req, res) => getSourcesController(res, null, null));
@@ -326,9 +444,10 @@ app.get("/api/sources/:id", (req, res) =>
 app.get("/api/sources/claims/:id", (req, res) =>
   getSourcesController(res, req.params.id, "claims")
 );
-
 app.post("/api/sources", upload.single("file"), postSourcesController);
+app.put("/api/sources/:id", putSourcesController);
 
+// Sourcetypes
 app.get("/api/sourcetypes", (req, res) =>
   getSourcetypesController(res, null, null)
 );
