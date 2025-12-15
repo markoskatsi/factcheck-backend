@@ -213,7 +213,7 @@ const read = async (selectSql) => {
   try {
     const [result] = await database.query(selectSql);
     return result.length === 0
-      ? { isSuccess: false, result: null, message: "No record(s) found" }
+      ? { isSuccess: true, result: [], message: "No record(s) found" }
       : { isSuccess: true, result: result, message: "Record(s) recovered" };
   } catch (error) {
     return {
