@@ -349,6 +349,17 @@ const buildSourcetypesSelectSql = (id) => {
   return sql;
 };
 
+const buildUsertypesSelectSql = (id) => {
+  let sql = "";
+  const table = "Usertypes";
+  const fields = ["UsertypeID", "UsertypeName", "UsertypeDescription"];
+
+  sql = `SELECT ${fields} FROM ${table}`;
+  if (id) sql += ` WHERE UsertypeID = ${id}`;
+
+  return sql;
+};
+
 const buildSourcesSelectSql = (id, variant) => {
   let sql = "";
   const table =
@@ -425,6 +436,16 @@ const getSourcetypesController = async (res, id, variant) => {
   // Validate request
   // Access database
   const sql = buildSourcetypesSelectSql(id, variant);
+  const { isSuccess, result, message } = await read(sql);
+  if (!isSuccess) return res.status(400).json({ message });
+  // Response to request
+  res.status(200).json(result);
+};
+
+const getUsertypesController = async (res, id, variant) => {
+  // Validate request
+  // Access database
+  const sql = buildUsertypesSelectSql(id, variant);
   const { isSuccess, result, message } = await read(sql);
   if (!isSuccess) return res.status(400).json({ message });
   // Response to request
@@ -562,6 +583,10 @@ app.get("/api/sourcetypes", (req, res) =>
 app.get("/api/users", (req, res) => {
   getUsersController(res, null, null);
 });
+// Usertypes
+app.get("/api/usertypes", (req, res) =>
+  getUsertypesController(res, null, null)
+);
 // Start server ----------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
