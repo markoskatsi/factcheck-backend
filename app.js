@@ -383,13 +383,14 @@ const buildSourcesSelectSql = (id, variant) => {
 
 const buildUsersSelectSql = (id) => {
   let sql = "";
-  const table = "Users";
+  const table = "Users INNER JOIN Usertypes ON Users.UserUsertypeID=Usertypes.UsertypeID";
   const fields = [
     "UserID",
     "UserFirstname",
     "UserLastname",
     "UserEmail",
-    "UserType",
+    "UsertypeName",
+    "UserUsertypeID",
   ];
 
   sql = `SELECT ${fields} FROM ${table}`;
