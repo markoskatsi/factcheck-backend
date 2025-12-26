@@ -209,9 +209,9 @@ const createSource = async (sql, record) => {
   }
 };
 
-const read = async (selectSql) => {
+const read = async (sql, id) => {
   try {
-    const [result] = await database.query(selectSql);
+    const [result] = await database.query(sql, { ID: id });
     return result.length === 0
       ? { isSuccess: true, result: [], message: "No record(s) found" }
       : { isSuccess: true, result: result, message: "Record(s) recovered" };
@@ -324,14 +324,14 @@ const buildClaimsSelectSql = (id, variant) => {
 
   switch (variant) {
     case "users":
-      sql = `SELECT ${fields} FROM ${table} WHERE Claims.ClaimUserID = ${id} ORDER BY ClaimCreated DESC`;
+      sql = `SELECT ${fields} FROM ${table} WHERE Claims.ClaimUserID =:ID ORDER BY ClaimCreated DESC`;
       break;
     case "claimstatus":
-      sql = `SELECT ${fields} FROM ${table} WHERE Claims.ClaimClaimstatusID = ${id} ORDER BY ClaimCreated DESC`;
+      sql = `SELECT ${fields} FROM ${table} WHERE Claims.ClaimClaimstatusID =:ID ORDER BY ClaimCreated DESC`;
       break;
     default:
       sql = `SELECT ${fields} FROM ${table}`;
-      if (id) sql += ` WHERE ClaimID = ${id}`;
+      if (id) sql += ` WHERE ClaimID =:ID`;
       sql += ` ORDER BY ClaimCreated DESC`;
   }
 
@@ -394,7 +394,8 @@ const buildSourcesSelectSql = (id, variant) => {
 
 const buildUsersSelectSql = (id) => {
   let sql = "";
-  const table = "Users INNER JOIN Usertypes ON Users.UserUsertypeID=Usertypes.UsertypeID";
+  const table =
+    "Users INNER JOIN Usertypes ON Users.UserUsertypeID=Usertypes.UsertypeID";
   const fields = [
     "UserID",
     "UserFirstname",
@@ -410,18 +411,20 @@ const buildUsersSelectSql = (id) => {
   return sql;
 };
 
-const getClaimsController = async (res, id, variant) => {
+const getClaimsController = async (req, res, variant) => {
+  const id = req.params.id;
   // Validate request
 
   // Access database
   const sql = buildClaimsSelectSql(id, variant);
-  const { isSuccess, result, message } = await read(sql);
+  const { isSuccess, result, message } = await read(sql, id);
   if (!isSuccess) return res.status(400).json({ message });
   // Response to request
   res.status(200).json(result);
 };
 
-const getUsersController = async (res, id, variant) => {
+const getUsersController = async (req, res, variant) => {
+  const id = req.params.id;
   // Validate request
 
   // Access database
@@ -432,7 +435,8 @@ const getUsersController = async (res, id, variant) => {
   res.status(200).json(result);
 };
 
-const getSourcetypesController = async (res, id, variant) => {
+const getSourcetypesController = async (req, res, variant) => {
+  const id = req.params.id;
   // Validate request
   // Access database
   const sql = buildSourcetypesSelectSql(id, variant);
@@ -442,7 +446,8 @@ const getSourcetypesController = async (res, id, variant) => {
   res.status(200).json(result);
 };
 
-const getUsertypesController = async (res, id, variant) => {
+const getUsertypesController = async (req, res, variant) => {
+  const id = req.params.id;
   // Validate request
   // Access database
   const sql = buildUsertypesSelectSql(id, variant);
@@ -452,21 +457,52 @@ const getUsertypesController = async (res, id, variant) => {
   res.status(200).json(result);
 };
 
+const getSourcesController = async (req, res, variant) => {
+  const id = req.params.id;
+  // Validate request
+
+  // Access database
+  const sql = buildSourcesSelectSql(id, variant);
+  const { isSuccess, result, message } = await read(sql);
+  if (!isSuccess) return res.status(400).json({ message });
+  // Response to request
+  res.status(200).json(result);
+};
+
 const postClaimsController = async (req, res) => {
+  const record = req.body;
   // Validate request
 
   // Access database
   const sql = buildClaimsInsertSql();
-  const { isSuccess, result, message } = await createClaim(sql, req.body);
+  const { isSuccess, result, message } = await createClaim(sql, record);
+  if (!isSuccess) return res.status(404).json({ message });
+  // Response to request
+  res.status(201).json(result);
+};
+
+const postSourcesController = async (req, res) => {
+  const record = req.body;
+  // Validate request
+  if (req.file) {
+    req.body.SourceFilename = req.file.originalname;
+    req.body.SourceFilepath = `/uploads/${req.file.filename}`;
+    req.body.SourceFiletype = req.file.mimetype;
+    req.body.SourceFilesize = req.file.size;
+  }
+
+  // Access database
+  const sql = buildSourcesInsertSql();
+  const { isSuccess, result, message } = await createSource(sql, record);
   if (!isSuccess) return res.status(404).json({ message });
   // Response to request
   res.status(201).json(result);
 };
 
 const putClaimsController = async (req, res) => {
-  // Validate request
   const id = req.params.id;
   const record = req.body;
+  // Validate request
 
   // Access database
   const sql = buildClaimsUpdateSql();
@@ -478,9 +514,9 @@ const putClaimsController = async (req, res) => {
 };
 
 const putSourcesController = async (req, res) => {
-  // Validate request
   const id = req.params.id;
   const record = req.body;
+  // Validate request
 
   // Access database
   const sql = buildSourcesUpdateSql();
@@ -492,8 +528,8 @@ const putSourcesController = async (req, res) => {
 };
 
 const deleteClaimController = async (req, res) => {
-  // Validate request
   const id = req.params.id;
+  // Validate request
 
   // Access database
   const sql = buildClaimsDeleteSql();
@@ -505,8 +541,8 @@ const deleteClaimController = async (req, res) => {
 };
 
 const deleteSourceController = async (req, res) => {
-  // Validate request
   const id = req.params.id;
+  // Validate request
 
   // Access database
   const sql = buildSourcesDeleteSql();
@@ -517,42 +553,12 @@ const deleteSourceController = async (req, res) => {
   res.status(200).json({ message });
 };
 
-const getSourcesController = async (res, id, variant) => {
-  // Validate request
-
-  // Access database
-  const sql = buildSourcesSelectSql(id, variant);
-  const { isSuccess, result, message } = await read(sql);
-  if (!isSuccess) return res.status(400).json({ message });
-  // Response to request
-  res.status(200).json(result);
-};
-
-const postSourcesController = async (req, res) => {
-  // Validate request
-  if (req.file) {
-    req.body.SourceFilename = req.file.originalname;
-    req.body.SourceFilepath = `/uploads/${req.file.filename}`;
-    req.body.SourceFiletype = req.file.mimetype;
-    req.body.SourceFilesize = req.file.size;
-  }
-
-  // Access database
-  const sql = buildSourcesInsertSql();
-  const { isSuccess, result, message } = await createSource(sql, req.body);
-  if (!isSuccess) return res.status(404).json({ message });
-  // Response to request
-  res.status(201).json(result);
-};
-
 // Endpoints ------------------------------
 // Claims
-app.get("/api/claims", (req, res) => getClaimsController(res, null, null));
-app.get("/api/claims/:id", (req, res) =>
-  getClaimsController(res, req.params.id, null)
-);
+app.get("/api/claims", (req, res) => getClaimsController(req, res, null));
+app.get("/api/claims/:id", (req, res) => getClaimsController(req, res, null));
 app.get("/api/claims/users/:id", (req, res) =>
-  getClaimsController(res, req.params.id, "users")
+  getClaimsController(req, res, "users")
 );
 app.post("/api/claims", postClaimsController);
 app.put("/api/claims/:id", putClaimsController);
@@ -560,16 +566,14 @@ app.delete("/api/claims/:id", deleteClaimController);
 
 // Claimstatus
 app.get("/api/claims/claimstatus/:id", (req, res) =>
-  getClaimsController(res, req.params.id, "claimstatus")
+  getClaimsController(req, res, "claimstatus")
 );
 
 // Sources
-app.get("/api/sources", (req, res) => getSourcesController(res, null, null));
-app.get("/api/sources/:id", (req, res) =>
-  getSourcesController(res, req.params.id, null)
-);
+app.get("/api/sources", (req, res) => getSourcesController(req, res, null));
+app.get("/api/sources/:id", (req, res) => getSourcesController(req, res, null));
 app.get("/api/sources/claims/:id", (req, res) =>
-  getSourcesController(res, req.params.id, "claims")
+  getSourcesController(req, res, "claims")
 );
 app.post("/api/sources", upload.single("file"), postSourcesController);
 app.put("/api/sources/:id", putSourcesController);
@@ -577,16 +581,14 @@ app.delete("/api/sources/:id", deleteSourceController);
 
 // Sourcetypes
 app.get("/api/sourcetypes", (req, res) =>
-  getSourcetypesController(res, null, null)
+  getSourcetypesController(req, res, null)
 );
 // Users
 app.get("/api/users", (req, res) => {
-  getUsersController(res, null, null);
+  getUsersController(req, res, null);
 });
 // Usertypes
-app.get("/api/usertypes", (req, res) =>
-  getUsertypesController(res, null, null)
-);
+app.get("/api/usertypes", (req, res) => getUsertypesController(req, res, null));
 // Start server ----------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
