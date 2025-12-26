@@ -56,7 +56,7 @@ const buildSourcesDeleteSql = () => {
   return `DELETE FROM ${table} WHERE SourceID=:SourceID`;
 };
 
-const buildClaimsUpdateSql = () => {
+const buildClaimsUpdateQuery = (record, id) => {
   const table = "Claims";
   const mutableFields = [
     "ClaimTitle",
@@ -66,12 +66,14 @@ const buildClaimsUpdateSql = () => {
   ];
 
   console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields));
-  return (
-    `UPDATE ${table}` + buildSetField(mutableFields) + ` WHERE ClaimID=:ClaimID`
-  );
+  const sql =
+    `UPDATE ${table}` +
+    buildSetField(mutableFields) +
+    ` WHERE ClaimID=:ClaimID`;
+  return { sql, data: { ...record, ClaimID: id } };
 };
 
-const buildSourcesUpdateSql = () => {
+const buildSourcesUpdateQuery = (record, id) => {
   const table = "Sources";
   const mutableFields = [
     "SourceDescription",
@@ -85,11 +87,11 @@ const buildSourcesUpdateSql = () => {
   ];
 
   console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields));
-  return (
+  const sql =
     `UPDATE ${table}` +
     buildSetField(mutableFields) +
-    ` WHERE SourceID=:SourceID`
-  );
+    ` WHERE SourceID=:SourceID`;
+  return { sql, data: { ...record, SourceID: id } };
 };
 
 const buildClaimsCreateQuery = (record) => {
@@ -276,9 +278,9 @@ const deleteSource = async (sql, id) => {
   }
 };
 
-const updateClaim = async (sql, id, record) => {
+const updateClaim = async (updateQuery) => {
   try {
-    const status = await database.query(sql, { ...record, ClaimID: id });
+    const status = await database.query(updateQuery.sql, updateQuery.data);
 
     if (status[0].affectedRows === 0) {
       return {
@@ -288,9 +290,9 @@ const updateClaim = async (sql, id, record) => {
       };
     }
 
-    const recoverRecordSql = buildClaimsSelectSql(id, null);
+    const readQuery = buildClaimsReadQuery(updateQuery.data.ClaimID, null);
 
-    const { isSuccess, result, message } = await read(recoverRecordSql);
+    const { isSuccess, result, message } = await read(readQuery);
 
     return isSuccess
       ? {
@@ -312,9 +314,9 @@ const updateClaim = async (sql, id, record) => {
   }
 };
 
-const updateSource = async (sql, id, record) => {
+const updateSource = async (updateQuery) => {
   try {
-    const status = await database.query(sql, { ...record, SourceID: id });
+    const status = await database.query(updateQuery.sql, updateQuery.data);
 
     if (status[0].affectedRows === 0) {
       return {
@@ -324,9 +326,9 @@ const updateSource = async (sql, id, record) => {
       };
     }
 
-    const recoverRecordSql = buildSourcesSelectSql(id, null);
+    const readQuery = buildSourcesReadQuery(updateQuery.data.SourceID, null);
 
-    const { isSuccess, result, message } = await read(recoverRecordSql);
+    const { isSuccess, result, message } = await read(readQuery);
 
     return isSuccess
       ? {
@@ -416,6 +418,8 @@ const read = async (query) => {
   }
 };
 
+// GET Controllers
+
 const getClaimsController = async (req, res, variant) => {
   const id = req.params.id;
   // Validate request
@@ -474,6 +478,8 @@ const getSourcesController = async (req, res, variant) => {
   res.status(200).json(result);
 };
 
+// POST Controllers
+
 const postClaimsController = async (req, res) => {
   const record = req.body;
   // Validate request
@@ -505,14 +511,16 @@ const postSourcesController = async (req, res) => {
   res.status(201).json(result);
 };
 
+// PUT Controllers
+
 const putClaimsController = async (req, res) => {
   const id = req.params.id;
   const record = req.body;
   // Validate request
 
   // Access database
-  const sql = buildClaimsUpdateSql();
-  const { isSuccess, result, message } = await updateClaim(sql, id, record);
+  const query = buildClaimsUpdateQuery(record, id);
+  const { isSuccess, result, message } = await updateClaim(query);
   if (!isSuccess) return res.status(400).json({ message });
 
   // Response to request
@@ -525,13 +533,15 @@ const putSourcesController = async (req, res) => {
   // Validate request
 
   // Access database
-  const sql = buildSourcesUpdateSql();
-  const { isSuccess, result, message } = await updateSource(sql, id, record);
+  const query = buildSourcesUpdateQuery(record, id);
+  const { isSuccess, result, message } = await updateSource(query);
   if (!isSuccess) return res.status(400).json({ message });
 
   // Response to request
   res.status(200).json(result);
 };
+
+// DELETE Controllers
 
 const deleteClaimController = async (req, res) => {
   const id = req.params.id;
