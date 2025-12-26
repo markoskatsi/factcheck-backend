@@ -344,7 +344,7 @@ const buildSourcetypesSelectSql = (id) => {
   const fields = ["SourcetypeID", "SourcetypeName", "SourcetypeDescription"];
 
   sql = `SELECT ${fields} FROM ${table}`;
-  if (id) sql += ` WHERE SourcetypeID = ${id}`;
+  if (id) sql += ` WHERE SourcetypeID = :ID`;
 
   return sql;
 };
@@ -355,7 +355,7 @@ const buildUsertypesSelectSql = (id) => {
   const fields = ["UsertypeID", "UsertypeName", "UsertypeDescription"];
 
   sql = `SELECT ${fields} FROM ${table}`;
-  if (id) sql += ` WHERE UsertypeID = ${id}`;
+  if (id) sql += ` WHERE UsertypeID = :ID`;
 
   return sql;
 };
@@ -381,11 +381,11 @@ const buildSourcesSelectSql = (id, variant) => {
 
   switch (variant) {
     case "claims":
-      sql = `SELECT ${fields} FROM ${table} WHERE SourceClaimID = ${id} ORDER BY SourceCreated DESC`;
+      sql = `SELECT ${fields} FROM ${table} WHERE SourceClaimID = :ID ORDER BY SourceCreated DESC`;
       break;
     default:
       sql = `SELECT ${fields} FROM ${table}`;
-      if (id) sql += ` WHERE SourceID = ${id}`;
+      if (id) sql += ` WHERE SourceID = :ID`;
       sql += ` ORDER BY SourceCreated DESC`;
   }
 
@@ -406,7 +406,7 @@ const buildUsersSelectSql = (id) => {
   ];
 
   sql = `SELECT ${fields} FROM ${table}`;
-  if (id) sql += ` WHERE UserID = ${id}`;
+  if (id) sql += ` WHERE UserID = :ID`;
 
   return sql;
 };
@@ -429,7 +429,7 @@ const getUsersController = async (req, res, variant) => {
 
   // Access database
   const sql = buildUsersSelectSql(id, variant);
-  const { isSuccess, result, message } = await read(sql);
+  const { isSuccess, result, message } = await read(sql, id);
   if (!isSuccess) return res.status(400).json({ message });
   // Response to request
   res.status(200).json(result);
@@ -440,7 +440,7 @@ const getSourcetypesController = async (req, res, variant) => {
   // Validate request
   // Access database
   const sql = buildSourcetypesSelectSql(id, variant);
-  const { isSuccess, result, message } = await read(sql);
+  const { isSuccess, result, message } = await read(sql, id);
   if (!isSuccess) return res.status(400).json({ message });
   // Response to request
   res.status(200).json(result);
@@ -451,7 +451,7 @@ const getUsertypesController = async (req, res, variant) => {
   // Validate request
   // Access database
   const sql = buildUsertypesSelectSql(id, variant);
-  const { isSuccess, result, message } = await read(sql);
+  const { isSuccess, result, message } = await read(sql, id);
   if (!isSuccess) return res.status(400).json({ message });
   // Response to request
   res.status(200).json(result);
@@ -463,7 +463,7 @@ const getSourcesController = async (req, res, variant) => {
 
   // Access database
   const sql = buildSourcesSelectSql(id, variant);
-  const { isSuccess, result, message } = await read(sql);
+  const { isSuccess, result, message } = await read(sql, id);
   if (!isSuccess) return res.status(400).json({ message });
   // Response to request
   res.status(200).json(result);
