@@ -344,7 +344,7 @@ const buildSourcetypesSelectSql = (id) => {
   const fields = ["SourcetypeID", "SourcetypeName", "SourcetypeDescription"];
 
   sql = `SELECT ${fields} FROM ${table}`;
-  if (id) sql += ` WHERE SourcetypeID = :ID`;
+  if (id) sql += ` WHERE SourcetypeID =:ID`;
 
   return sql;
 };
@@ -355,7 +355,7 @@ const buildUsertypesSelectSql = (id) => {
   const fields = ["UsertypeID", "UsertypeName", "UsertypeDescription"];
 
   sql = `SELECT ${fields} FROM ${table}`;
-  if (id) sql += ` WHERE UsertypeID = :ID`;
+  if (id) sql += ` WHERE UsertypeID =:ID`;
 
   return sql;
 };
@@ -583,12 +583,18 @@ app.delete("/api/sources/:id", deleteSourceController);
 app.get("/api/sourcetypes", (req, res) =>
   getSourcetypesController(req, res, null)
 );
+app.get("/api/sourcetypes/:id", (req, res) =>
+  getSourcetypesController(req, res, null)
+);
 // Users
 app.get("/api/users", (req, res) => {
   getUsersController(req, res, null);
 });
 // Usertypes
 app.get("/api/usertypes", (req, res) => getUsertypesController(req, res, null));
+app.get("/api/usertypes/:id", (req, res) =>
+  getUsertypesController(req, res, null)
+);
 // Start server ----------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
