@@ -46,14 +46,16 @@ const buildSetField = (fields) =>
     " SET "
   );
 
-const buildClaimsDeleteSql = () => {
+const buildClaimsDeleteQuery = (id) => {
   const table = "Claims";
-  return `DELETE FROM ${table} WHERE ClaimID=:ClaimID`;
+  const sql = `DELETE FROM ${table} WHERE ClaimID=:ClaimID`;
+  return { sql, data: { ClaimID: id } };
 };
 
-const buildSourcesDeleteSql = () => {
+const buildSourcesDeleteQuery = (id) => {
   const table = "Sources";
-  return `DELETE FROM ${table} WHERE SourceID=:SourceID`;
+  const sql = `DELETE FROM ${table} WHERE SourceID=:SourceID`;
+  return { sql, data: { SourceID: id } };
 };
 
 const buildClaimsUpdateQuery = (record, id) => {
@@ -230,15 +232,15 @@ const buildUsersReadQuery = (id) => {
   return { sql: sql, data: { ID: id } };
 };
 
-const deleteClaim = async (sql, id) => {
+const deleteClaim = async (deleteQuery) => {
   try {
-    const status = await database.query(sql, { ClaimID: id });
+    const status = await database.query(deleteQuery.sql, deleteQuery.data);
 
     return status[0].affectedRows === 0
       ? {
           isSuccess: false,
           result: null,
-          message: `Failed to delete record: ${id}`,
+          message: `Failed to delete record: ${deleteQuery.data.ClaimID}`,
         }
       : {
           isSuccess: true,
@@ -254,15 +256,15 @@ const deleteClaim = async (sql, id) => {
   }
 };
 
-const deleteSource = async (sql, id) => {
+const deleteSource = async (deleteQuery) => {
   try {
-    const status = await database.query(sql, { SourceID: id });
+    const status = await database.query(deleteQuery.sql, deleteQuery.data);
 
     return status[0].affectedRows === 0
       ? {
           isSuccess: false,
           result: null,
-          message: `Failed to delete record: ${id}`,
+          message: `Failed to delete record: ${deleteQuery.data.SourceID}`,
         }
       : {
           isSuccess: true,
@@ -548,8 +550,8 @@ const deleteClaimController = async (req, res) => {
   // Validate request
 
   // Access database
-  const sql = buildClaimsDeleteSql();
-  const { isSuccess, result, message } = await deleteClaim(sql, id);
+  const query = buildClaimsDeleteQuery(id);
+  const { isSuccess, result, message } = await deleteClaim(query);
   if (!isSuccess) return res.status(400).json({ message });
 
   // Response to request
@@ -561,8 +563,8 @@ const deleteSourceController = async (req, res) => {
   // Validate request
 
   // Access database
-  const sql = buildSourcesDeleteSql();
-  const { isSuccess, result, message } = await deleteSource(sql, id);
+  const query = buildSourcesDeleteQuery(id);
+  const { isSuccess, result, message } = await deleteSource(query);
   if (!isSuccess) return res.status(400).json({ message });
 
   // Response to request
