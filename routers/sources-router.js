@@ -1,15 +1,13 @@
 import { Router } from "express";
 import database from "../database.js";
 import multer from "multer";
+import cloudinary from "../utils/cloudinary.js";
 
 const router = Router();
 
 // Multer ----------------------------------------------
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
   filename: (req, file, cb) => {
     const uniqueName = Date.now() + "-" + file.originalname;
     cb(null, uniqueName);
@@ -210,10 +208,17 @@ const postSourcesController = async (req, res) => {
   const record = req.body;
   // Validate request
   if (req.file) {
-    req.body.SourceFilename = req.file.originalname;
-    req.body.SourceFilepath = `/uploads/${req.file.filename}`;
-    req.body.SourceFiletype = req.file.mimetype;
-    req.body.SourceFilesize = req.file.size;
+    try {
+      const uploadResult = await cloudinary.uploader.upload(req.file.path);
+      record.SourceFilename = req.file.originalname;
+      record.SourceFilepath = uploadResult.secure_url;
+      record.SourceFiletype = req.file.mimetype;
+      record.SourceFilesize = req.file.size;
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: `Cloudinary upload failed: ${error.message}` });
+    }
   }
 
   // Access database
