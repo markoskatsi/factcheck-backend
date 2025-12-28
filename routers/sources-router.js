@@ -245,7 +245,20 @@ const putSourcesController = async (req, res) => {
   const id = req.params.id;
   const record = req.body;
   // Validate request
-
+  if (req.file) {
+    try {
+      const uploadResult = await cloudinary.uploader.upload(req.file.path);
+      record.SourceFilename = req.file.originalname;
+      record.SourceFilepath = uploadResult.secure_url;
+      record.SourceFiletype = req.file.mimetype;
+      record.SourceFilesize = req.file.size;
+      record.SourceURL = null;
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: `Cloudinary upload failed: ${error.message}` });
+    }
+  }
   // Access database
   const query = buildSourcesUpdateQuery(record, id);
   const { isSuccess, result, message } = await updateSource(query);
@@ -275,7 +288,7 @@ router.get("/claims/:id", (req, res) =>
 );
 router.post("/", upload.single("file"), postSourcesController);
 
-router.put("/:id", putSourcesController);
+router.put("/:id", upload.single("file"), putSourcesController);
 
 router.delete("/:id", deleteSourceController);
 
