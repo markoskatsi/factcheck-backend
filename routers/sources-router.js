@@ -258,7 +258,13 @@ const putSourcesController = async (req, res) => {
         .status(500)
         .json({ message: `Cloudinary upload failed: ${error.message}` });
     }
+  } else if (record.SourceURL) {
+    record.SourceFilename = null;
+    record.SourceFilepath = null;
+    record.SourceFiletype = null;
+    record.SourceFilesize = null;
   }
+
   // Access database
   const query = buildSourcesUpdateQuery(record, id);
   const { isSuccess, result, message } = await updateSource(query);
