@@ -50,6 +50,12 @@ const buildAssignmentsUpdateQuery = (record, id) => {
     ` WHERE AssignmentID=:AssignmentID`;
   return { sql, data: { ...record, AssignmentID: id } };
 };
+
+const buildAssignmentsDeleteQuery = (id) => {
+  const table = "Assignments";
+  const sql = `DELETE FROM ${table} WHERE AssignmentID=:AssignmentID`;
+  return { sql, data: { AssignmentID: id } };
+};
 // Data accessorts --------------------------------------
 const createAssignment = async (createQuery) => {
   try {
@@ -131,6 +137,30 @@ const updateAssignment = async (updateQuery) => {
     };
   }
 };
+
+const deleteAssignment = async (deleteQuery) => {
+  try {
+    const status = await database.query(deleteQuery.sql, deleteQuery.data);
+
+    return status[0].affectedRows === 0
+      ? {
+          isSuccess: false,
+          result: null,
+          message: `Failed to delete record: ${deleteQuery.data.AssignmentID}`,
+        }
+      : {
+          isSuccess: true,
+          result: null,
+          message: "Record successfully deleted",
+        };
+  } catch (error) {
+    return {
+      isSuccess: false,
+      result: null,
+      message: `Failed to execute query: ${error.message}`,
+    };
+  }
+};
 // Controllers ------------------------------------------
 const postAssignmentsController = async (req, res) => {
   const record = req.body;
@@ -169,6 +199,19 @@ const putAssignmentsController = async (req, res) => {
   // Response to request
   res.status(200).json(result);
 };
+
+const deleteAssignmentController = async (req, res) => {
+  const id = req.params.id;
+  // Validate request
+
+  // Access database
+  const query = buildAssignmentsDeleteQuery(id);
+  const { isSuccess, result, message } = await deleteAssignment(query);
+  if (!isSuccess) return res.status(400).json({ message });
+
+  // Response to request
+  res.status(200).json({ message });
+};
 // Endpoints --------------------------------------------
 router.post("/", postAssignmentsController);
 
@@ -176,4 +219,5 @@ router.get("/", (req, res) => getAssignmentsController(req, res, null));
 router.get("/:id", (req, res) => getAssignmentsController(req, res, null));
 
 router.put("/:id", putAssignmentsController);
+router.delete("/:id", deleteAssignmentController);
 export default router;
