@@ -7,6 +7,7 @@ import sourcesRouter from "./routers/sources-router.js";
 import sourcetypesRouter from "./routers/sourcetypes-router.js";
 import usersRouter from "./routers/users-router.js";
 import usertypesRouter from "./routers/usertypes-router.js";
+import assignmentsRouter from "./routers/assignments-router.js";
 
 // Configure express app and multer-------------------
 const app = express();
@@ -32,7 +33,7 @@ app.use("/api/sources", sourcesRouter);
 app.use("/api/sourcetypes", sourcetypesRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/usertypes", usertypesRouter);
-
+app.use("/api/assignments", assignmentsRouter);
 // Start server ----------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
