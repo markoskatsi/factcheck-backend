@@ -4,6 +4,22 @@ import database from "../database.js";
 const router = Router();
 
 // Query builders ---------------------------------------
+const buildSetField = (fields) =>
+  fields.reduce(
+    (setSQL, field, index) =>
+      setSQL + `${field}=:${field}` + (index === fields.length - 1 ? "" : ", "),
+    " SET "
+  );
+
+const buildAssignmentsCreateQuery = (record) => {
+  const table = "Assignments";
+  const mutableFields = ["AssignmentUserID", "AssignmentClaimID"];
+
+  console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields));
+  const sql = `INSERT INTO ${table}` + buildSetField(mutableFields);
+  return { sql, data: record };
+};
+
 const buildAssignmentsReadQuery = (id) => {
   let sql = "";
   const table =
@@ -11,8 +27,8 @@ const buildAssignmentsReadQuery = (id) => {
   const fields = [
     "AssignmentID",
     "AssignmentUserID",
-    "CONCAT(Users.UserFirstname, ' ', Users.UserLastname) AS AssignedUserName",
     "AssignmentClaimID",
+    "CONCAT(Users.UserFirstname, ' ', Users.UserLastname) AS AssignedUserName",
     "Claims.ClaimTitle AS ClaimTitle",
     "AssignmentCreated",
   ];
@@ -23,6 +39,33 @@ const buildAssignmentsReadQuery = (id) => {
   return { sql: sql, data: { ID: id } };
 };
 // Data accessorts --------------------------------------
+const createAssignment = async (createQuery) => {
+  try {
+    const status = await database.query(createQuery.sql, createQuery.data);
+    const readQuery = buildAssignmentsReadQuery(status[0].insertId, null);
+
+    const { isSuccess, result, message } = await read(readQuery);
+
+    return isSuccess
+      ? {
+          isSuccess: true,
+          result: result,
+          message: "Record successfully recovered",
+        }
+      : {
+          isSuccess: false,
+          result: null,
+          message: `Failed to recover the inserted record: ${message}`,
+        };
+  } catch (error) {
+    return {
+      isSuccess: false,
+      result: null,
+      message: `Failed to execute query: ${error.message}`,
+    };
+  }
+};
+
 const read = async (query) => {
   try {
     const [result] = await database.query(query.sql, query.data);
@@ -38,6 +81,19 @@ const read = async (query) => {
   }
 };
 // Controllers ------------------------------------------
+const postAssignmentsController = async (req, res) => {
+  const record = req.body;
+  // Validate request
+
+  // Access database
+  const query = buildAssignmentsCreateQuery(record);
+  const { isSuccess, result, message } = await createAssignment(query);
+  if (!isSuccess) return res.status(404).json({ message });
+
+  // Response to request
+  res.status(201).json(result);
+};
+
 const getAssignmentsController = async (req, res, variant) => {
   const id = req.params.id;
   // Validate request
@@ -49,6 +105,8 @@ const getAssignmentsController = async (req, res, variant) => {
   res.status(200).json(result);
 };
 // Endpoints --------------------------------------------
+router.post("/", postAssignmentsController);
+
 router.get("/", (req, res) => getAssignmentsController(req, res, null));
 router.get("/:id", (req, res) => getAssignmentsController(req, res, null));
 export default router;
