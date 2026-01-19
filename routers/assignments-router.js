@@ -20,7 +20,7 @@ const buildAssignmentsCreateQuery = (record) => {
   return { sql, data: record };
 };
 
-const buildAssignmentsReadQuery = (id) => {
+const buildAssignmentsReadQuery = (id, variant) => {
   let sql = "";
   const table =
     "Assignments INNER JOIN Users ON Assignments.AssignmentUserID=Users.UserID INNER JOIN Claims ON Assignments.AssignmentClaimID=Claims.ClaimID";
@@ -32,9 +32,14 @@ const buildAssignmentsReadQuery = (id) => {
     "Claims.ClaimTitle AS ClaimTitle",
     "AssignmentCreated",
   ];
-
-  sql = `SELECT ${fields} FROM ${table}`;
-  if (id) sql += ` WHERE AssignmentID =:ID`;
+  switch (variant) {
+    case "users":
+      sql = `SELECT ${fields} FROM ${table} WHERE Assignments.AssignmentUserID =:ID`;
+      break;
+    default:
+      sql = `SELECT ${fields} FROM ${table}`;
+      if (id) sql += ` WHERE AssignmentID =:ID`;
+  }
 
   return { sql: sql, data: { ID: id } };
 };
@@ -217,6 +222,9 @@ router.post("/", postAssignmentsController);
 
 router.get("/", (req, res) => getAssignmentsController(req, res, null));
 router.get("/:id", (req, res) => getAssignmentsController(req, res, null));
+router.get("/users/:id", (req, res) =>
+  getAssignmentsController(req, res, "users")
+);
 
 router.put("/:id", putAssignmentsController);
 router.delete("/:id", deleteAssignmentController);
