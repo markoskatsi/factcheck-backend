@@ -38,6 +38,18 @@ const buildAssignmentsReadQuery = (id) => {
 
   return { sql: sql, data: { ID: id } };
 };
+
+const buildAssignmentsUpdateQuery = (record, id) => {
+  const table = "Assignments";
+  const mutableFields = ["AssignmentUserID", "AssignmentClaimID"];
+
+  console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields));
+  const sql =
+    `UPDATE ${table}` +
+    buildSetField(mutableFields) +
+    ` WHERE AssignmentID=:AssignmentID`;
+  return { sql, data: { ...record, AssignmentID: id } };
+};
 // Data accessorts --------------------------------------
 const createAssignment = async (createQuery) => {
   try {
@@ -80,6 +92,45 @@ const read = async (query) => {
     };
   }
 };
+
+const updateAssignment = async (updateQuery) => {
+  try {
+    const status = await database.query(updateQuery.sql, updateQuery.data);
+
+    if (status[0].affectedRows === 0) {
+      return {
+        isSuccess: false,
+        result: null,
+        message: `Failed to update record: no rows affected`,
+      };
+    }
+
+    const readQuery = buildAssignmentsReadQuery(
+      updateQuery.data.AssignmentID,
+      null
+    );
+
+    const { isSuccess, result, message } = await read(readQuery);
+
+    return isSuccess
+      ? {
+          isSuccess: true,
+          result: result,
+          message: "Record successfully recovered",
+        }
+      : {
+          isSuccess: false,
+          result: null,
+          message: `Failed to recover the updated record: ${message}`,
+        };
+  } catch (error) {
+    return {
+      isSuccess: false,
+      result: null,
+      message: `Failed to execute query: ${error.message}`,
+    };
+  }
+};
 // Controllers ------------------------------------------
 const postAssignmentsController = async (req, res) => {
   const record = req.body;
@@ -104,9 +155,25 @@ const getAssignmentsController = async (req, res, variant) => {
   // Response to request
   res.status(200).json(result);
 };
+
+const putAssignmentsController = async (req, res) => {
+  const id = req.params.id;
+  const record = req.body;
+  // Validate request
+
+  // Access database
+  const query = buildAssignmentsUpdateQuery(record, id);
+  const { isSuccess, result, message } = await updateAssignment(query);
+  if (!isSuccess) return res.status(400).json({ message });
+
+  // Response to request
+  res.status(200).json(result);
+};
 // Endpoints --------------------------------------------
 router.post("/", postAssignmentsController);
 
 router.get("/", (req, res) => getAssignmentsController(req, res, null));
 router.get("/:id", (req, res) => getAssignmentsController(req, res, null));
+
+router.put("/:id", putAssignmentsController);
 export default router;
