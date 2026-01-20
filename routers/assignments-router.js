@@ -8,7 +8,7 @@ const buildSetField = (fields) =>
   fields.reduce(
     (setSQL, field, index) =>
       setSQL + `${field}=:${field}` + (index === fields.length - 1 ? "" : ", "),
-    " SET "
+    " SET ",
   );
 
 const buildAssignmentsCreateQuery = (record) => {
@@ -33,6 +33,9 @@ const buildAssignmentsReadQuery = (id, variant) => {
     "AssignmentCreated",
   ];
   switch (variant) {
+    case "claims":
+      sql = `SELECT ${fields} FROM ${table} WHERE Assignments.AssignmentClaimID =:ID`;
+      break;
     case "users":
       sql = `SELECT ${fields} FROM ${table} WHERE Assignments.AssignmentUserID =:ID`;
       break;
@@ -118,7 +121,7 @@ const updateAssignment = async (updateQuery) => {
 
     const readQuery = buildAssignmentsReadQuery(
       updateQuery.data.AssignmentID,
-      null
+      null,
     );
 
     const { isSuccess, result, message } = await read(readQuery);
@@ -223,7 +226,10 @@ router.post("/", postAssignmentsController);
 router.get("/", (req, res) => getAssignmentsController(req, res, null));
 router.get("/:id", (req, res) => getAssignmentsController(req, res, null));
 router.get("/users/:id", (req, res) =>
-  getAssignmentsController(req, res, "users")
+  getAssignmentsController(req, res, "users"),
+);
+router.get("/claims/:id", (req, res) =>
+  getAssignmentsController(req, res, "claims"),
 );
 
 router.put("/:id", putAssignmentsController);
