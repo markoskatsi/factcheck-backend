@@ -1,15 +1,10 @@
 import { Router } from "express";
 import database from "../database.js";
+import { buildSetField } from "../utils/setField.js";
 
 const router = Router();
 
 // Query builders ---------------------------------------
-const buildSetField = (fields) =>
-  fields.reduce(
-    (setSQL, field, index) =>
-      setSQL + `${field}=:${field}` + (index === fields.length - 1 ? "" : ", "),
-    " SET "
-  );
 
 const buildClaimsCreateQuery = (record) => {
   const table = "Claims";

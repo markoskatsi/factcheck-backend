@@ -2,6 +2,7 @@ import { Router } from "express";
 import database from "../database.js";
 import multer from "multer";
 import cloudinary from "../utils/cloudinary.js";
+import { buildSetField } from "../utils/setField.js";
 
 const router = Router();
 
@@ -17,12 +18,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Query builders ---------------------------------------
-const buildSetField = (fields) =>
-  fields.reduce(
-    (setSQL, field, index) =>
-      setSQL + `${field}=:${field}` + (index === fields.length - 1 ? "" : ", "),
-    " SET "
-  );
 
 const buildSourcesCreateQuery = (record) => {
   const table = "Sources";
