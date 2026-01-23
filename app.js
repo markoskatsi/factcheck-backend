@@ -17,7 +17,7 @@ app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
     "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
+    "Origin, X-Requested-With, Content-Type, Accept",
   );
   next();
 });
@@ -34,6 +34,22 @@ app.use("/api/sourcetypes", sourcetypesRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/usertypes", usertypesRouter);
 app.use("/api/assignments", assignmentsRouter);
+app.get("/api", (req, res) => {
+  res.status(200).json({
+    message: "List of available endpoints",
+    endpoints: [
+      [
+        { entity: "Claims", sap: "/api/claims" },
+        { entity: "Users claims", sap: "/api/claims/users" },
+      ],
+      { entity: "Sources", sap: "/api/sources" },
+      { entity: "Source Types", sap: "/api/sourcetypes" },
+      { entity: "Users", sap: "/api/users" },
+      { entity: "User Types", sap: "/api/usertypes" },
+      { entity: "Assignments", sap: "/api/assignments" },
+    ],
+  });
+});
 // Start server ----------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
