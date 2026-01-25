@@ -18,13 +18,16 @@ const buildAssignmentsCreateQuery = (record) => {
 const buildAssignmentsReadQuery = (id, variant) => {
   let sql = "";
   const table =
-    "Assignments INNER JOIN Users ON Assignments.AssignmentUserID=Users.UserID INNER JOIN Claims ON Assignments.AssignmentClaimID=Claims.ClaimID";
+    "Assignments INNER JOIN Users ON Assignments.AssignmentUserID=Users.UserID INNER JOIN Claims ON Assignments.AssignmentClaimID=Claims.ClaimID INNER JOIN Claimstatus ON Claims.ClaimClaimstatusID=Claimstatus.ClaimstatusID";
   const fields = [
     "AssignmentID",
     "AssignmentUserID",
     "AssignmentClaimID",
     "CONCAT(Users.UserFirstname, ' ', Users.UserLastname) AS AssignedUserName",
     "Claims.ClaimTitle AS ClaimTitle",
+    "Claims.ClaimDescription AS ClaimDescription",
+    "Claims.ClaimCreated AS ClaimCreated",
+    "Claimstatus.ClaimstatusName AS ClaimstatusName",
     "AssignmentCreated",
   ];
   switch (variant) {
