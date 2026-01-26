@@ -4,7 +4,7 @@ import database from "../database.js";
 const router = Router();
 
 // Query builders ---------------------------------------
-const buildUsersReadQuery = (id) => {
+const buildUsersReadQuery = (id, variant) => {
   let sql = "";
   const table =
     "Users INNER JOIN Usertypes ON Users.UserUsertypeID=Usertypes.UsertypeID";
@@ -16,9 +16,14 @@ const buildUsersReadQuery = (id) => {
     "UsertypeName",
     "UserUsertypeID",
   ];
-
-  sql = `SELECT ${fields} FROM ${table}`;
-  if (id) sql += ` WHERE UserID = :ID`;
+  switch (variant) {
+    case "usertype":
+      sql = `SELECT ${fields} FROM ${table} WHERE Users.UserUsertypeID = :ID`;
+      break;
+    default:
+      sql = `SELECT ${fields} FROM ${table}`;
+      if (id) sql += ` WHERE UserID = :ID`;
+  }
 
   return { sql: sql, data: { ID: id } };
 };
@@ -56,6 +61,9 @@ router.get("/", (req, res) => {
 });
 router.get("/:id", (req, res) => {
   getUsersController(req, res, null);
+});
+router.get("/usertypes/:id", (req, res) => {
+  getUsersController(req, res, "usertype");
 });
 
 export default router;

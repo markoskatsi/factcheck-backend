@@ -74,6 +74,11 @@ app.get("/api", (req, res) => {
         methods: ["GET"],
       },
       {
+        entity: "Users by User Types",
+        path: "/api/users/usertypes/:id",
+        methods: ["GET"],
+      },
+      {
         entity: "User Types",
         path: "/api/usertypes",
         methods: ["GET"],
