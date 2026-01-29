@@ -27,14 +27,8 @@ app.use(cors({ origin: "*" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Endpoints ------------------------------
-app.use("/api/claims", claimsRouter);
-app.use("/api/sources", sourcesRouter);
-app.use("/api/sourcetypes", sourcetypesRouter);
-app.use("/api/users", usersRouter);
-app.use("/api/usertypes", usertypesRouter);
-app.use("/api/assignments", assignmentsRouter);
-app.get("/api", (req, res) => {
+// Controllers ----------------------------
+const showApiInfo = async (req, res) => {
   res.status(200).json({
     message: "List of available endpoints",
     endpoints: [
@@ -100,7 +94,16 @@ app.get("/api", (req, res) => {
       },
     ],
   });
-});
+};
+
+// Endpoints ------------------------------
+app.use("/api/claims", claimsRouter);
+app.use("/api/sources", sourcesRouter);
+app.use("/api/sourcetypes", sourcetypesRouter);
+app.use("/api/users", usersRouter);
+app.use("/api/usertypes", usertypesRouter);
+app.use("/api/assignments", assignmentsRouter);
+app.get("/api", showApiInfo);
 // Start server ----------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
