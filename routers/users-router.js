@@ -3,35 +3,22 @@ import database from "../database.js";
 import Model from "../models/Model.js";
 import modelConfig from "../models/users-model.js";
 import Accessor from "../accessor/Accessor.js";
+import Controller from "../controllers/Controller.js";
 
 // Model -----------------------------------------------
-
 const model = new Model(modelConfig);
 
 // Data accessorts --------------------------------------
 const accessor = new Accessor(model, database);
-// Controllers ------------------------------------------
-const getUsersController = async (req, res, variant) => {
-  const id = req.params.id;
-  // Validate request
 
-  // Access database
-  const { isSuccess, result, message } = await accessor.read(id, variant);
-  if (!isSuccess) return res.status(400).json({ message });
-  // Response to request
-  res.status(200).json(result);
-};
+// Controllers ------------------------------------------
+const controller = new Controller(accessor);
+
 // Endpoints --------------------------------------------
 const router = Router();
 
-router.get("/", (req, res) => {
-  getUsersController(req, res, null);
-});
-router.get("/:id", (req, res) => {
-  getUsersController(req, res, null);
-});
-router.get("/usertypes/:id", (req, res) => {
-  getUsersController(req, res, "usertype");
-});
+router.get("/", (req, res) => controller.get(req, res, null));
+router.get("/:id", (req, res) => controller.get(req, res, null));
+router.get("/usertypes/:id", (req, res) => controller.get(req, res, "usertype"));
 
 export default router;

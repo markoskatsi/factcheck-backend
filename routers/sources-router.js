@@ -5,23 +5,20 @@ import cloudinary from "../utils/cloudinary.js";
 import Model from "../models/Model.js";
 import modelConfig from "../models/sources-model.js";
 import Accessor from "../accessor/Accessor.js";
+import Controller from "../controllers/Controller.js";
 
 // Multer ----------------------------------------------
-
 const storage = multer.diskStorage({
   filename: (req, file, cb) => {
     cb(null, file.originalname);
   },
 });
-
 const upload = multer({ storage });
 
 // Model ------------------------------------------------
-
 const model = new Model(modelConfig);
 
 // Data Accessors ---------------------------------------
-
 const accessor = new Accessor(model, database);
 
 // Controllers ------------------------------------------
@@ -47,17 +44,6 @@ const postSourcesController = async (req, res) => {
   if (!isSuccess) return res.status(404).json({ message });
   // Response to request
   res.status(201).json(result);
-};
-
-const getSourcesController = async (req, res, variant) => {
-  const id = req.params.id;
-  // Validate request
-
-  // Access database
-  const { isSuccess, result, message } = await accessor.read(id, variant);
-  if (!isSuccess) return res.status(400).json({ message });
-  // Response to request
-  res.status(200).json(result);
 };
 
 const putSourcesController = async (req, res) => {
@@ -91,30 +77,16 @@ const putSourcesController = async (req, res) => {
   // Response to request
   res.status(200).json(result);
 };
+const controller = new Controller(accessor);
 
-const deleteSourceController = async (req, res) => {
-  const id = req.params.id;
-  // Validate request
-
-  // Access database
-  const { isSuccess, result, message } = await accessor.delete(id);
-  if (!isSuccess) return res.status(400).json({ message });
-
-  // Response to request
-  res.status(200).json({ message });
-};
 // Endpoints --------------------------------------------
 const router = Router();
 
-router.get("/", (req, res) => getSourcesController(req, res, null));
-router.get("/:id", (req, res) => getSourcesController(req, res, null));
-router.get("/claims/:id", (req, res) =>
-  getSourcesController(req, res, "claims"),
-);
+router.get("/", (req, res) => controller.get(req, res, null));
+router.get("/:id", (req, res) => controller.get(req, res, null));
+router.get("/claims/:id", (req, res) => controller.get(req, res, "claims"));
 router.post("/", upload.single("file"), postSourcesController);
-
 router.put("/:id", upload.single("file"), putSourcesController);
-
-router.delete("/:id", deleteSourceController);
+router.delete("/:id", controller.delete);
 
 export default router;
