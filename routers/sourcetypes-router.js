@@ -2,31 +2,18 @@ import { Router } from "express";
 import database from "../database.js";
 import Model from "../models/Model.js";
 import modelConfig from "../models/sourcetypes-model.js";
+import Accessor from "../accessor/Accessor.js";
 
 // Model  -----------------------------------------------
 const model = new Model(modelConfig);
 // Data accessorts --------------------------------------
-const read = async (id, variant) => {
-  try {
-    const { sql, data } = model.buildReadQuery(id);
-    const [result] = await database.query(sql, data);
-    return result.length === 0
-      ? { isSuccess: true, result: [], message: "No record(s) found" }
-      : { isSuccess: true, result: result, message: "Record(s) recovered" };
-  } catch (error) {
-    return {
-      isSuccess: false,
-      result: null,
-      message: `Failed to execute query: ${error.message}`,
-    };
-  }
-};
+const accessor = new Accessor(model, database);
 // Controllers ------------------------------------------
 const getSourcetypesController = async (req, res) => {
   const id = req.params.id;
   // Validate request
   // Access database
-  const { isSuccess, result, message } = await read(id);
+  const { isSuccess, result, message } = await accessor.read(id);
   if (!isSuccess) return res.status(400).json({ message });
   // Response to request
   res.status(200).json(result);
