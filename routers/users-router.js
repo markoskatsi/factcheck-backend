@@ -29,9 +29,11 @@ const buildUsersReadQuery = (id, variant) => {
 };
 
 // Data accessorts --------------------------------------
-const read = async (query) => {
+const read = async (id, variant) => {
   try {
-    const [result] = await database.query(query.sql, query.data);
+    const { sql, data } = buildUsersReadQuery(id, variant);
+
+    const [result] = await database.query(sql, data);
     return result.length === 0
       ? { isSuccess: true, result: [], message: "No record(s) found" }
       : { isSuccess: true, result: result, message: "Record(s) recovered" };
@@ -49,8 +51,7 @@ const getUsersController = async (req, res, variant) => {
   // Validate request
 
   // Access database
-  const query = buildUsersReadQuery(id, variant);
-  const { isSuccess, result, message } = await read(query);
+  const { isSuccess, result, message } = await read(id, variant);
   if (!isSuccess) return res.status(400).json({ message });
   // Response to request
   res.status(200).json(result);

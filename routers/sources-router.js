@@ -96,12 +96,11 @@ const buildSourcesDeleteQuery = (id) => {
 };
 
 // Data Accessors ---------------------------------------
-const createSource = async (createQuery) => {
+const create = async (record) => {
   try {
-    const status = await database.query(createQuery.sql, createQuery.data);
-    const readQuery = buildSourcesReadQuery(status[0].insertId, null);
-
-    const { isSuccess, result, message } = await read(readQuery);
+    const { sql, data } = buildSourcesCreateQuery(record);
+    const status = await database.query(sql, data);
+    const { isSuccess, result, message } = await read(status[0].insertId, null);
 
     return isSuccess
       ? {
@@ -123,9 +122,10 @@ const createSource = async (createQuery) => {
   }
 };
 
-const read = async (query) => {
+const read = async (id, variant) => {
   try {
-    const [result] = await database.query(query.sql, query.data);
+    const { sql, data } = buildSourcesReadQuery(id, variant);
+    const [result] = await database.query(sql, data);
     return result.length === 0
       ? { isSuccess: true, result: [], message: "No record(s) found" }
       : { isSuccess: true, result: result, message: "Record(s) recovered" };
@@ -138,10 +138,10 @@ const read = async (query) => {
   }
 };
 
-const updateSource = async (updateQuery) => {
+const update = async (record, id) => {
   try {
-    const status = await database.query(updateQuery.sql, updateQuery.data);
-
+    const { sql, data } = buildSourcesUpdateQuery(record, id);
+    const status = await database.query(sql, data);
     if (status[0].affectedRows === 0) {
       return {
         isSuccess: false,
@@ -150,9 +150,7 @@ const updateSource = async (updateQuery) => {
       };
     }
 
-    const readQuery = buildSourcesReadQuery(updateQuery.data.SourceID, null);
-
-    const { isSuccess, result, message } = await read(readQuery);
+    const { isSuccess, result, message } = await read(id, null);
 
     return isSuccess
       ? {
@@ -174,15 +172,16 @@ const updateSource = async (updateQuery) => {
   }
 };
 
-const deleteSource = async (deleteQuery) => {
+const _delete = async (id) => {
   try {
-    const status = await database.query(deleteQuery.sql, deleteQuery.data);
+    const { sql, data } = buildSourcesDeleteQuery(id);
+    const status = await database.query(sql, data);
 
     return status[0].affectedRows === 0
       ? {
           isSuccess: false,
           result: null,
-          message: `Failed to delete record: ${deleteQuery.data.SourceID}`,
+          message: `Failed to delete record: ${data.SourceID}`,
         }
       : {
           isSuccess: true,
@@ -216,8 +215,7 @@ const postSourcesController = async (req, res) => {
   }
 
   // Access database
-  const query = buildSourcesCreateQuery(record);
-  const { isSuccess, result, message } = await createSource(query);
+  const { isSuccess, result, message } = await create(record);
   if (!isSuccess) return res.status(404).json({ message });
   // Response to request
   res.status(201).json(result);
@@ -228,8 +226,7 @@ const getSourcesController = async (req, res, variant) => {
   // Validate request
 
   // Access database
-  const query = buildSourcesReadQuery(id, variant);
-  const { isSuccess, result, message } = await read(query);
+  const { isSuccess, result, message } = await read(id, variant);
   if (!isSuccess) return res.status(400).json({ message });
   // Response to request
   res.status(200).json(result);
@@ -260,8 +257,7 @@ const putSourcesController = async (req, res) => {
   }
 
   // Access database
-  const query = buildSourcesUpdateQuery(record, id);
-  const { isSuccess, result, message } = await updateSource(query);
+  const { isSuccess, result, message } = await update(record, id);
   if (!isSuccess) return res.status(400).json({ message });
 
   // Response to request
@@ -273,8 +269,7 @@ const deleteSourceController = async (req, res) => {
   // Validate request
 
   // Access database
-  const query = buildSourcesDeleteQuery(id);
-  const { isSuccess, result, message } = await deleteSource(query);
+  const { isSuccess, result, message } = await _delete(id);
   if (!isSuccess) return res.status(400).json({ message });
 
   // Response to request
@@ -284,7 +279,7 @@ const deleteSourceController = async (req, res) => {
 router.get("/", (req, res) => getSourcesController(req, res, null));
 router.get("/:id", (req, res) => getSourcesController(req, res, null));
 router.get("/claims/:id", (req, res) =>
-  getSourcesController(req, res, "claims")
+  getSourcesController(req, res, "claims"),
 );
 router.post("/", upload.single("file"), postSourcesController);
 
