@@ -63,12 +63,11 @@ const buildAssignmentsDeleteQuery = (id) => {
   return { sql, data: { AssignmentID: id } };
 };
 // Data accessorts --------------------------------------
-const createAssignment = async (createQuery) => {
+const create = async (record) => {
   try {
-    const status = await database.query(createQuery.sql, createQuery.data);
-    const readQuery = buildAssignmentsReadQuery(status[0].insertId, null);
-
-    const { isSuccess, result, message } = await read(readQuery);
+    const { sql, data } = buildAssignmentsCreateQuery(record);
+    const status = await database.query(sql, data);
+    const { isSuccess, result, message } = await read(status[0].insertId, null);
 
     return isSuccess
       ? {
@@ -90,9 +89,11 @@ const createAssignment = async (createQuery) => {
   }
 };
 
-const read = async (query) => {
+const read = async (id, variant) => {
   try {
-    const [result] = await database.query(query.sql, query.data);
+    const { sql, data } = buildAssignmentsReadQuery(id, variant);
+
+    const [result] = await database.query(sql, data);
     return result.length === 0
       ? { isSuccess: true, result: [], message: "No record(s) found" }
       : { isSuccess: true, result: result, message: "Record(s) recovered" };
@@ -105,9 +106,10 @@ const read = async (query) => {
   }
 };
 
-const updateAssignment = async (updateQuery) => {
+const update = async (record, id) => {
   try {
-    const status = await database.query(updateQuery.sql, updateQuery.data);
+    const { sql, data } = buildAssignmentsUpdateQuery(record, id);
+    const status = await database.query(sql, data);
 
     if (status[0].affectedRows === 0) {
       return {
@@ -117,12 +119,7 @@ const updateAssignment = async (updateQuery) => {
       };
     }
 
-    const readQuery = buildAssignmentsReadQuery(
-      updateQuery.data.AssignmentID,
-      null,
-    );
-
-    const { isSuccess, result, message } = await read(readQuery);
+    const { isSuccess, result, message } = await read(id, null);
 
     return isSuccess
       ? {
@@ -144,15 +141,16 @@ const updateAssignment = async (updateQuery) => {
   }
 };
 
-const deleteAssignment = async (deleteQuery) => {
+const _delete = async (id) => {
   try {
-    const status = await database.query(deleteQuery.sql, deleteQuery.data);
+    const { sql, data } = buildAssignmentsDeleteQuery(id);
+    const status = await database.query(sql, data);
 
     return status[0].affectedRows === 0
       ? {
           isSuccess: false,
           result: null,
-          message: `Failed to delete record: ${deleteQuery.data.AssignmentID}`,
+          message: `Failed to delete record: ${data.AssignmentID}`,
         }
       : {
           isSuccess: true,
@@ -173,8 +171,7 @@ const postAssignmentsController = async (req, res) => {
   // Validate request
 
   // Access database
-  const query = buildAssignmentsCreateQuery(record);
-  const { isSuccess, result, message } = await createAssignment(query);
+  const { isSuccess, result, message } = await create(record);
   if (!isSuccess) return res.status(404).json({ message });
 
   // Response to request
@@ -185,8 +182,7 @@ const getAssignmentsController = async (req, res, variant) => {
   const id = req.params.id;
   // Validate request
   // Access database
-  const query = buildAssignmentsReadQuery(id, variant);
-  const { isSuccess, result, message } = await read(query);
+  const { isSuccess, result, message } = await read(id, variant);
   if (!isSuccess) return res.status(400).json({ message });
   // Response to request
   res.status(200).json(result);
@@ -198,8 +194,7 @@ const putAssignmentsController = async (req, res) => {
   // Validate request
 
   // Access database
-  const query = buildAssignmentsUpdateQuery(record, id);
-  const { isSuccess, result, message } = await updateAssignment(query);
+  const { isSuccess, result, message } = await update(record, id);
   if (!isSuccess) return res.status(400).json({ message });
 
   // Response to request
@@ -211,8 +206,7 @@ const deleteAssignmentController = async (req, res) => {
   // Validate request
 
   // Access database
-  const query = buildAssignmentsDeleteQuery(id);
-  const { isSuccess, result, message } = await deleteAssignment(query);
+  const { isSuccess, result, message } = await _delete(id);
   if (!isSuccess) return res.status(400).json({ message });
 
   // Response to request
