@@ -2,9 +2,8 @@ import { Router } from "express";
 import database from "../database.js";
 import multer from "multer";
 import cloudinary from "../utils/cloudinary.js";
-import { buildSetField } from "../utils/setField.js";
-
-const router = Router();
+import Model from "../models/Model.js";
+import modelConfig from "../models/sources-model.js";
 
 // Multer ----------------------------------------------
 
@@ -16,89 +15,14 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Query builders ---------------------------------------
+// Model ------------------------------------------------
 
-const buildSourcesCreateQuery = (record) => {
-  const table = "Sources";
-  const mutableFields = [
-    "SourceDescription",
-    "SourceURL",
-    "SourceClaimID",
-    "SourceSourcetypeID",
-    "SourceFilename",
-    "SourceFilepath",
-    "SourceFiletype",
-    "SourceFilesize",
-  ];
-
-  console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields));
-  const sql = `INSERT INTO ${table}` + buildSetField(mutableFields);
-  return { sql, data: record };
-};
-
-const buildSourcesReadQuery = (id, variant) => {
-  let sql = "";
-  const table =
-    "Sources INNER JOIN Claims ON Sources.SourceClaimID=Claims.ClaimID INNER JOIN Sourcetypes ON Sources.SourceSourcetypeID=Sourcetypes.SourcetypeID";
-  const fields = [
-    "SourceID",
-    "SourcetypeName",
-    "SourceDescription",
-    "SourceCreated",
-    "ClaimDescription",
-    "SourceClaimID",
-    "SourceSourcetypeID",
-    "SourceURL",
-    "SourceFilename",
-    "SourceFilepath",
-    "SourceFiletype",
-    "SourceFilesize",
-  ];
-
-  switch (variant) {
-    case "claims":
-      sql = `SELECT ${fields} FROM ${table} WHERE SourceClaimID = :ID ORDER BY SourceCreated DESC`;
-      break;
-    default:
-      sql = `SELECT ${fields} FROM ${table}`;
-      if (id) sql += ` WHERE SourceID = :ID`;
-      sql += ` ORDER BY SourceCreated DESC`;
-  }
-
-  return { sql: sql, data: { ID: id } };
-};
-
-const buildSourcesUpdateQuery = (record, id) => {
-  const table = "Sources";
-  const mutableFields = [
-    "SourceDescription",
-    "SourceURL",
-    "SourceClaimID",
-    "SourceSourcetypeID",
-    "SourceFilename",
-    "SourceFilepath",
-    "SourceFiletype",
-    "SourceFilesize",
-  ];
-
-  console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields));
-  const sql =
-    `UPDATE ${table}` +
-    buildSetField(mutableFields) +
-    ` WHERE SourceID=:SourceID`;
-  return { sql, data: { ...record, SourceID: id } };
-};
-
-const buildSourcesDeleteQuery = (id) => {
-  const table = "Sources";
-  const sql = `DELETE FROM ${table} WHERE SourceID=:SourceID`;
-  return { sql, data: { SourceID: id } };
-};
+const model = new Model(modelConfig);
 
 // Data Accessors ---------------------------------------
 const create = async (record) => {
   try {
-    const { sql, data } = buildSourcesCreateQuery(record);
+    const { sql, data } = model.buildCreateQuery(record);
     const status = await database.query(sql, data);
     const { isSuccess, result, message } = await read(status[0].insertId, null);
 
@@ -124,7 +48,7 @@ const create = async (record) => {
 
 const read = async (id, variant) => {
   try {
-    const { sql, data } = buildSourcesReadQuery(id, variant);
+    const { sql, data } = model.buildReadQuery(id, variant);
     const [result] = await database.query(sql, data);
     return result.length === 0
       ? { isSuccess: true, result: [], message: "No record(s) found" }
@@ -140,7 +64,7 @@ const read = async (id, variant) => {
 
 const update = async (record, id) => {
   try {
-    const { sql, data } = buildSourcesUpdateQuery(record, id);
+    const { sql, data } = model.buildUpdateQuery(record, id);
     const status = await database.query(sql, data);
     if (status[0].affectedRows === 0) {
       return {
@@ -174,14 +98,14 @@ const update = async (record, id) => {
 
 const _delete = async (id) => {
   try {
-    const { sql, data } = buildSourcesDeleteQuery(id);
+    const { sql, data } = model.buildDeleteQuery(id);
     const status = await database.query(sql, data);
 
     return status[0].affectedRows === 0
       ? {
           isSuccess: false,
           result: null,
-          message: `Failed to delete record: ${data.SourceID}`,
+          message: `Failed to delete record: ${id}`,
         }
       : {
           isSuccess: true,
@@ -276,6 +200,8 @@ const deleteSourceController = async (req, res) => {
   res.status(200).json({ message });
 };
 // Endpoints --------------------------------------------
+const router = Router();
+
 router.get("/", (req, res) => getSourcesController(req, res, null));
 router.get("/:id", (req, res) => getSourcesController(req, res, null));
 router.get("/claims/:id", (req, res) =>

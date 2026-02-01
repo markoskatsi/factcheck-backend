@@ -1,71 +1,16 @@
 import { Router } from "express";
 import database from "../database.js";
-import { buildSetField } from "../utils/setField.js";
+import Model from "../models/Model.js";
+import modelConfig from "../models/assignments-model.js";
 
-const router = Router();
+// Modal ------------------------------------------------
 
-// Query builders ---------------------------------------
+const model = new Model(modelConfig);
 
-const buildAssignmentsCreateQuery = (record) => {
-  const table = "Assignments";
-  const mutableFields = ["AssignmentUserID", "AssignmentClaimID"];
-
-  console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields));
-  const sql = `INSERT INTO ${table}` + buildSetField(mutableFields);
-  return { sql, data: record };
-};
-
-const buildAssignmentsReadQuery = (id, variant) => {
-  let sql = "";
-  const table =
-    "Assignments INNER JOIN Users ON Assignments.AssignmentUserID=Users.UserID INNER JOIN Claims ON Assignments.AssignmentClaimID=Claims.ClaimID INNER JOIN Claimstatus ON Claims.ClaimClaimstatusID=Claimstatus.ClaimstatusID";
-  const fields = [
-    "AssignmentID",
-    "AssignmentUserID",
-    "AssignmentClaimID",
-    "CONCAT(Users.UserFirstname, ' ', Users.UserLastname) AS AssignedUserName",
-    "Claims.ClaimTitle AS ClaimTitle",
-    "Claims.ClaimDescription AS ClaimDescription",
-    "Claims.ClaimCreated AS ClaimCreated",
-    "Claimstatus.ClaimstatusName AS ClaimstatusName",
-    "AssignmentCreated",
-  ];
-  switch (variant) {
-    case "claims":
-      sql = `SELECT ${fields} FROM ${table} WHERE Assignments.AssignmentClaimID =:ID`;
-      break;
-    case "users":
-      sql = `SELECT ${fields} FROM ${table} WHERE Assignments.AssignmentUserID =:ID`;
-      break;
-    default:
-      sql = `SELECT ${fields} FROM ${table}`;
-      if (id) sql += ` WHERE AssignmentID =:ID`;
-  }
-
-  return { sql: sql, data: { ID: id } };
-};
-
-const buildAssignmentsUpdateQuery = (record, id) => {
-  const table = "Assignments";
-  const mutableFields = ["AssignmentUserID", "AssignmentClaimID"];
-
-  console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields));
-  const sql =
-    `UPDATE ${table}` +
-    buildSetField(mutableFields) +
-    ` WHERE AssignmentID=:AssignmentID`;
-  return { sql, data: { ...record, AssignmentID: id } };
-};
-
-const buildAssignmentsDeleteQuery = (id) => {
-  const table = "Assignments";
-  const sql = `DELETE FROM ${table} WHERE AssignmentID=:AssignmentID`;
-  return { sql, data: { AssignmentID: id } };
-};
 // Data accessorts --------------------------------------
 const create = async (record) => {
   try {
-    const { sql, data } = buildAssignmentsCreateQuery(record);
+    const { sql, data } = model.buildCreateQuery(record);
     const status = await database.query(sql, data);
     const { isSuccess, result, message } = await read(status[0].insertId, null);
 
@@ -91,7 +36,7 @@ const create = async (record) => {
 
 const read = async (id, variant) => {
   try {
-    const { sql, data } = buildAssignmentsReadQuery(id, variant);
+    const { sql, data } = model.buildReadQuery(id, variant);
 
     const [result] = await database.query(sql, data);
     return result.length === 0
@@ -108,7 +53,7 @@ const read = async (id, variant) => {
 
 const update = async (record, id) => {
   try {
-    const { sql, data } = buildAssignmentsUpdateQuery(record, id);
+    const { sql, data } = model.buildUpdateQuery(record, id);
     const status = await database.query(sql, data);
 
     if (status[0].affectedRows === 0) {
@@ -143,14 +88,14 @@ const update = async (record, id) => {
 
 const _delete = async (id) => {
   try {
-    const { sql, data } = buildAssignmentsDeleteQuery(id);
+    const { sql, data } = model.buildDeleteQuery(id);
     const status = await database.query(sql, data);
 
     return status[0].affectedRows === 0
       ? {
           isSuccess: false,
           result: null,
-          message: `Failed to delete record: ${data.AssignmentID}`,
+          message: `Failed to delete record: ${id}`,
         }
       : {
           isSuccess: true,
@@ -213,6 +158,8 @@ const deleteAssignmentController = async (req, res) => {
   res.status(200).json({ message });
 };
 // Endpoints --------------------------------------------
+const router = Router();
+
 router.post("/", postAssignmentsController);
 
 router.get("/", (req, res) => getAssignmentsController(req, res, null));

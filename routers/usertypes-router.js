@@ -1,23 +1,15 @@
 import { Router } from "express";
 import database from "../database.js";
+import Model from "../models/Model.js";
+import modelConfig from "../models/usertypes-model.js";
 
-const router = Router();
+// Model  -----------------------------------------------
+const model = new Model(modelConfig);
 
-// Query builders ---------------------------------------
-const buildUsertypesReadQuery = (id) => {
-  let sql = "";
-  const table = "Usertypes";
-  const fields = ["UsertypeID", "UsertypeName", "UsertypeDescription"];
-
-  sql = `SELECT ${fields} FROM ${table}`;
-  if (id) sql += ` WHERE UsertypeID =:ID`;
-
-  return { sql: sql, data: { ID: id } };
-};
 // Data accessorts --------------------------------------
 const read = async (id, variant) => {
   try {
-    const { sql, data } = buildUsertypesReadQuery(id, variant);
+    const { sql, data } = model.buildReadQuery(id, variant);
 
     const [result] = await database.query(sql, data);
     return result.length === 0
@@ -42,6 +34,8 @@ const getUsertypesController = async (req, res, variant) => {
   res.status(200).json(result);
 };
 // Endpoints --------------------------------------------
+const router = Router();
+
 router.get("/", (req, res) => getUsertypesController(req, res, null));
 router.get("/:id", (req, res) => getUsertypesController(req, res, null));
 export default router;

@@ -1,37 +1,16 @@
 import { Router } from "express";
 import database from "../database.js";
+import Model from "../models/Model.js";
+import modelConfig from "../models/users-model.js";
 
-const router = Router();
+// Model -----------------------------------------------
 
-// Query builders ---------------------------------------
-const buildUsersReadQuery = (id, variant) => {
-  let sql = "";
-  const table =
-    "Users INNER JOIN Usertypes ON Users.UserUsertypeID=Usertypes.UsertypeID";
-  const fields = [
-    "UserID",
-    "UserFirstname",
-    "UserLastname",
-    "UserEmail",
-    "UsertypeName",
-    "UserUsertypeID",
-  ];
-  switch (variant) {
-    case "usertype":
-      sql = `SELECT ${fields} FROM ${table} WHERE Users.UserUsertypeID = :ID`;
-      break;
-    default:
-      sql = `SELECT ${fields} FROM ${table}`;
-      if (id) sql += ` WHERE UserID = :ID`;
-  }
-
-  return { sql: sql, data: { ID: id } };
-};
+const model = new Model(modelConfig);
 
 // Data accessorts --------------------------------------
 const read = async (id, variant) => {
   try {
-    const { sql, data } = buildUsersReadQuery(id, variant);
+    const { sql, data } = model.buildReadQuery(id, variant);
 
     const [result] = await database.query(sql, data);
     return result.length === 0
@@ -57,6 +36,8 @@ const getUsersController = async (req, res, variant) => {
   res.status(200).json(result);
 };
 // Endpoints --------------------------------------------
+const router = Router();
+
 router.get("/", (req, res) => {
   getUsersController(req, res, null);
 });

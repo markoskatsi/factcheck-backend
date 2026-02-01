@@ -1,83 +1,16 @@
 import { Router } from "express";
 import database from "../database.js";
-import { buildSetField } from "../utils/setField.js";
+import Model from "../models/Model.js";
+import modelConfig from "../models/claims-model.js";
 
-const router = Router();
+// Model  -----------------------------------------------
 
-// Query builders ---------------------------------------
-
-const buildClaimsCreateQuery = (record) => {
-  const table = "Claims";
-  const mutableFields = [
-    "ClaimTitle",
-    "ClaimDescription",
-    "ClaimUserID",
-    "ClaimClaimstatusID",
-  ];
-
-  console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields));
-  const sql = `INSERT INTO ${table}` + buildSetField(mutableFields);
-  return { sql, data: record };
-};
-
-const buildClaimsReadQuery = (id, variant) => {
-  let sql = "";
-  const table =
-    "Claims INNER JOIN Users ON Claims.ClaimUserID=Users.UserID INNER JOIN Claimstatus ON Claims.ClaimClaimstatusID=Claimstatus.ClaimstatusID";
-  const fields = [
-    "ClaimID",
-    "ClaimTitle",
-    "ClaimDescription",
-    "ClaimCreated",
-    "ClaimstatusName",
-    "CONCAT(Users.UserFirstname, ' ', Users.UserLastname) AS ClaimUserName",
-    "ClaimUserID",
-    "ClaimClaimstatusID",
-  ];
-
-  switch (variant) {
-    case "users":
-      sql = `SELECT ${fields} FROM ${table} WHERE Claims.ClaimUserID =:ID ORDER BY ClaimCreated DESC`;
-      break;
-    case "claimstatus":
-      sql = `SELECT ${fields} FROM ${table} WHERE Claims.ClaimClaimstatusID =:ID ORDER BY ClaimCreated DESC`;
-      break;
-    default:
-      sql = `SELECT ${fields} FROM ${table}`;
-      if (id) sql += ` WHERE ClaimID =:ID`;
-      sql += ` ORDER BY ClaimCreated DESC`;
-  }
-
-  return { sql: sql, data: { ID: id } };
-};
-
-const buildClaimsUpdateQuery = (record, id) => {
-  const table = "Claims";
-  const mutableFields = [
-    "ClaimTitle",
-    "ClaimDescription",
-    "ClaimUserID",
-    "ClaimClaimstatusID",
-  ];
-
-  console.log("SQL : " + `INSERT INTO ${table}` + buildSetField(mutableFields));
-  const sql =
-    `UPDATE ${table}` +
-    buildSetField(mutableFields) +
-    ` WHERE ClaimID=:ClaimID`;
-  return { sql, data: { ...record, ClaimID: id } };
-};
-
-const buildClaimsDeleteQuery = (id) => {
-  const table = "Claims";
-  const sql = `DELETE FROM ${table} WHERE ClaimID=:ClaimID`;
-  return { sql, data: { ClaimID: id } };
-};
+const model = new Model(modelConfig);
 
 // Data accessorts --------------------------------------
 const create = async (record) => {
   try {
-    const { sql, data } = buildClaimsCreateQuery(record);
+    const { sql, data } = model.buildCreateQuery(record);
     const status = await database.query(sql, data);
 
     const { isSuccess, result, message } = await read(status[0].insertId, null);
@@ -104,7 +37,7 @@ const create = async (record) => {
 
 const read = async (id, variant) => {
   try {
-    const { sql, data } = buildClaimsReadQuery(id, variant);
+    const { sql, data } = model.buildReadQuery(id, variant);
     const [result] = await database.query(sql, data);
     return result.length === 0
       ? { isSuccess: true, result: [], message: "No record(s) found" }
@@ -120,7 +53,7 @@ const read = async (id, variant) => {
 
 const update = async (record, id) => {
   try {
-    const { sql, data } = buildClaimsUpdateQuery(record, id);
+    const { sql, data } = model.buildUpdateQuery(record, id);
     const status = await database.query(sql, data);
 
     if (status[0].affectedRows === 0) {
@@ -155,14 +88,14 @@ const update = async (record, id) => {
 
 const _delete = async (id) => {
   try {
-    const { sql, data } = buildClaimsDeleteQuery(id);
+    const { sql, data } = model.buildDeleteQuery(id);
     const status = await database.query(sql, data);
 
     return status[0].affectedRows === 0
       ? {
           isSuccess: false,
           result: null,
-          message: `Failed to delete record: ${deleteQuery.data.ClaimID}`,
+          message: `Failed to delete record: ${id}`,
         }
       : {
           isSuccess: true,
@@ -228,6 +161,7 @@ const deleteClaimController = async (req, res) => {
 };
 
 // Endpoints --------------------------------------------
+const router = Router();
 
 router.get("/", (req, res) => getClaimsController(req, res, null));
 router.get("/:id", (req, res) => getClaimsController(req, res, null));
