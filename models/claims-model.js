@@ -4,7 +4,6 @@ model.table = "Claims";
 model.mutableFields = [
   "ClaimTitle",
   "ClaimDescription",
-  "ClaimCreated",
   "ClaimUserID",
   "ClaimClaimstatusID",
 ];
@@ -17,6 +16,7 @@ model.buildReadQuery = (id, variant) => {
   const resolvedFields = [
     model.idField,
     ...model.mutableFields,
+    "ClaimCreated",
     "ClaimstatusName",
     "CONCAT(Users.UserFirstname, ' ', Users.UserLastname) AS ClaimUserName",
   ];

@@ -1,11 +1,7 @@
 const model = {};
 
 model.table = "Assignments";
-model.mutableFields = [
-  "AssignmentUserID",
-  "AssignmentClaimID",
-  "AssignmentCreated",
-];
+model.mutableFields = ["AssignmentUserID", "AssignmentClaimID"];
 model.idField = "AssignmentID";
 
 model.buildReadQuery = (id, variant) => {
@@ -15,6 +11,7 @@ model.buildReadQuery = (id, variant) => {
   const resolvedFields = [
     model.idField,
     ...model.mutableFields,
+    "AssignmentCreated",
     "CONCAT(Users.UserFirstname, ' ', Users.UserLastname) AS AssignedUserName",
     "Claims.ClaimTitle AS ClaimTitle",
     "Claims.ClaimDescription AS ClaimDescription",
