@@ -1,3 +1,5 @@
+import cloudinary from "../utils/cloudinary.js";
+
 class Controller {
   constructor(accessor) {
     this.accessor = accessor;

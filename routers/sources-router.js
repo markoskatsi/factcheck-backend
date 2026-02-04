@@ -1,19 +1,11 @@
+import upload from "../middleware/upload.js";
 import { Router } from "express";
 import database from "../database.js";
-import multer from "multer";
 import cloudinary from "../utils/cloudinary.js";
 import Model from "../models/Model.js";
 import modelConfig from "../models/sources-model.js";
 import Accessor from "../accessor/Accessor.js";
 import Controller from "../controllers/Controller.js";
-
-// Multer ----------------------------------------------
-const storage = multer.diskStorage({
-  filename: (req, file, cb) => {
-    cb(null, file.originalname);
-  },
-});
-const upload = multer({ storage });
 
 // Model ------------------------------------------------
 const model = new Model(modelConfig);

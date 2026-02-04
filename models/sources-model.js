@@ -3,7 +3,6 @@ const model = {};
 model.table = "Sources";
 model.mutableFields = [
   "SourceDescription",
-  "SourceCreated",
   "SourceClaimID",
   "SourceSourcetypeID",
   "SourceURL",
@@ -20,6 +19,7 @@ model.buildReadQuery = (id, variant) => {
   const resolvedFields = [
     model.idField,
     ...model.mutableFields,
+    "SourceCreated",
     "SourcetypeName",
     "ClaimDescription",
   ];
