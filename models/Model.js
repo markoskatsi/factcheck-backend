@@ -16,23 +16,23 @@ class Model {
       " SET ",
     );
 
-  buildCreateQuery = (record) => {
+  buildCreateQuery = (req) => {
     const sql =
       `INSERT INTO ${this.table}` + this.buildSetFields(this.mutableFields);
-    return { sql, data: record };
+    return { sql, parameters: req.body };
   };
 
-  buildUpdateQuery = (record, id) => {
+  buildUpdateQuery = (req) => {
     const sql =
       `UPDATE ${this.table}` +
       this.buildSetFields(this.mutableFields) +
       ` WHERE ${this.idField}=:${this.idField}`;
-    return { sql, data: { ...record, [this.idField]: id } };
+    return { sql, parameters: { ...req.body, [this.idField]: req.params.id } };
   };
 
-  buildDeleteQuery = (id) => {
+  buildDeleteQuery = (req) => {
     const sql = `DELETE FROM ${this.table} WHERE ${this.idField}=:${this.idField}`;
-    return { sql, data: { [this.idField]: id } };
+    return { sql, parameters: { [this.idField]: req.params.id } };
   };
 }
 

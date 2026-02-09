@@ -1,18 +1,40 @@
-const model = {};
+import { parseRequestQuery, constructPreparedStatement } from "./utils.js";
 
-model.table = "Sourcetypes";
-model.mutableFields = ["SourcetypeName", "SourcetypeDescription"];
-model.idField = "SourcetypeID";
+const model = {
+  table: "Sourcetypes",
+  idField: "SourcetypeID",
+  mutableFields: ["SourcetypeName", "SourcetypeDescription"],
 
-model.buildReadQuery = (id) => {
-  let sql = "";
-  const table = "Sourcetypes";
-  const fields = ["SourcetypeID", "SourcetypeName", "SourcetypeDescription"];
+  buildReadQuery: (req, variant) => {
+    // Initialisations ------------------------
+    let [table, fields] = [
+      model.table,
+      [model.idField, ...model.mutableFields],
+    ];
 
-  sql = `SELECT ${fields} FROM ${table}`;
-  if (id) sql += ` WHERE ${model.idField} =:ID`;
+    // Process request queries ----------------
+    const allowedQueryFields = [...model.mutableFields];
+    const [filter, orderby] = parseRequestQuery(req, allowedQueryFields);
 
-  return { sql: sql, data: { ID: id } };
+    // Construct prepared statement -----------
+    let where = null;
+    let parameters = {};
+    switch (variant) {
+      case "primary":
+        where = "SourcetypeID=:ID";
+        parameters = { ID: parseInt(req.params.id) };
+        break;
+    }
+
+    return constructPreparedStatement(
+      fields,
+      table,
+      where,
+      parameters,
+      filter,
+      orderby,
+    );
+  },
 };
 
 export default model;

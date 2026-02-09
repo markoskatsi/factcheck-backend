@@ -1,18 +1,40 @@
-const model = {};
+import { parseRequestQuery, constructPreparedStatement } from "./utils.js";
 
-model.table = "Usertypes";
-model.mutableFields = ["UsertypeName", "UsertypeDescription"];
-model.idField = "UsertypeID";
+const model = {
+  table: "Usertypes",
+  idField: "UsertypeID",
+  mutableFields: ["UsertypeName", "UsertypeDescription"],
 
-model.buildReadQuery = (id) => {
-  let sql = "";
-  const table = "Usertypes";
-  const fields = [model.idField, ...model.mutableFields];
+  buildReadQuery: (req, variant) => {
+    // Initialisations ------------------------
+    let [table, fields] = [
+      model.table,
+      [model.idField, ...model.mutableFields],
+    ];
 
-  sql = `SELECT ${fields} FROM ${table}`;
-  if (id) sql += ` WHERE ${model.idField} =:ID`;
+    // Process request queries ----------------
+    const allowedQueryFields = [...model.mutableFields];
+    const [filter, orderby] = parseRequestQuery(req, allowedQueryFields);
 
-  return { sql: sql, data: { ID: id } };
+    // Construct prepared statement -----------
+    let where = null;
+    let parameters = {};
+    switch (variant) {
+      case "primary":
+        where = "UsertypeID=:ID";
+        parameters = { ID: parseInt(req.params.id) };
+        break;
+    }
+
+    return constructPreparedStatement(
+      fields,
+      table,
+      where,
+      parameters,
+      filter,
+      orderby,
+    );
+  },
 };
 
 export default model;

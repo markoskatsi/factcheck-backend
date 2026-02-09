@@ -1,33 +1,53 @@
-const model = {};
+import { parseRequestQuery, constructPreparedStatement } from "./utils.js";
 
-model.table = "Users";
-model.mutableFields = [
-  "UserFirstname",
-  "UserLastname",
-  "UserEmail",
-  "UserUsertypeID",
-];
-model.idField = "UserID";
+const model = {
+  table: "Users",
+  idField: "UserID",
+  mutableFields: [
+    "UserFirstname",
+    "UserLastname",
+    "UserEmail",
+    "UserUsertypeID",
+  ],
 
-model.buildReadQuery = (id, variant) => {
-  let sql = "";
-  const resolvedTable =
-    "Users INNER JOIN Usertypes ON Users.UserUsertypeID=Usertypes.UsertypeID";
-  const resolvedFields = [
-    model.idField,
-    ...model.mutableFields,
-    "Usertypes.UsertypeName",
-  ];
-  switch (variant) {
-    case "usertype":
-      sql = `SELECT ${resolvedFields} FROM ${resolvedTable} WHERE Users.UserUsertypeID = :ID`;
-      break;
-    default:
-      sql = `SELECT ${resolvedFields} FROM ${resolvedTable}`;
-      if (id) sql += ` WHERE ${model.idField} = :ID`;
-  }
+  buildReadQuery: (req, variant) => {
+    // Initialisations ------------------------
+    let [table, fields] = [
+      model.table,
+      [model.idField, ...model.mutableFields],
+    ];
 
-  return { sql: sql, data: { ID: id } };
+    // Resolve Foreign Keys -------------------
+    table = `(${table} INNER JOIN Usertypes ON Users.UserUsertypeID=Usertypes.UsertypeID)`;
+    fields = [...fields, "Usertypes.UsertypeName"];
+
+    // Process request queries ----------------
+    const allowedQueryFields = [...model.mutableFields, "UsertypeName"];
+    const [filter, orderby] = parseRequestQuery(req, allowedQueryFields);
+
+    // Construct prepared statement -----------
+    let where = null;
+    let parameters = {};
+    switch (variant) {
+      case "primary":
+        where = "UserID=:ID";
+        parameters = { ID: parseInt(req.params.id) };
+        break;
+      case "usertype":
+        where = "Users.UserUsertypeID=:ID";
+        parameters = { ID: parseInt(req.params.id) };
+        break;
+    }
+
+    return constructPreparedStatement(
+      fields,
+      table,
+      where,
+      parameters,
+      filter,
+      orderby,
+    );
+  },
 };
 
 export default model;

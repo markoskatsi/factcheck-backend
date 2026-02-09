@@ -1,40 +1,67 @@
-const model = {};
+import { parseRequestQuery, constructPreparedStatement } from "./utils.js";
 
-model.table = "Claims";
-model.mutableFields = [
-  "ClaimTitle",
-  "ClaimDescription",
-  "ClaimUserID",
-  "ClaimClaimstatusID",
-];
-model.idField = "ClaimID";
+const model = {
+  table: "Claims",
+  idField: "ClaimID",
+  mutableFields: [
+    "ClaimTitle",
+    "ClaimDescription",
+    "ClaimUserID",
+    "ClaimClaimstatusID",
+  ],
 
-model.buildReadQuery = (id, variant) => {
-  let sql = "";
-  const resolvedTable =
-    "Claims INNER JOIN Users ON Claims.ClaimUserID=Users.UserID INNER JOIN Claimstatus ON Claims.ClaimClaimstatusID=Claimstatus.ClaimstatusID";
-  const resolvedFields = [
-    model.idField,
-    ...model.mutableFields,
-    "ClaimCreated",
-    "ClaimstatusName",
-    "CONCAT(Users.UserFirstname, ' ', Users.UserLastname) AS ClaimUserName",
-  ];
+  buildReadQuery: (req, variant) => {
+    // Initialisations ------------------------
+    let [table, fields] = [
+      model.table,
+      [model.idField, ...model.mutableFields],
+    ];
 
-  switch (variant) {
-    case "users":
-      sql = `SELECT ${resolvedFields} FROM ${resolvedTable} WHERE Claims.ClaimUserID =:ID ORDER BY ClaimCreated DESC`;
-      break;
-    case "claimstatus":
-      sql = `SELECT ${resolvedFields} FROM ${resolvedTable} WHERE Claims.ClaimClaimstatusID =:ID ORDER BY ClaimCreated DESC`;
-      break;
-    default:
-      sql = `SELECT ${resolvedFields} FROM ${resolvedTable}`;
-      if (id) sql += ` WHERE ${model.idField} =:ID`;
-      sql += ` ORDER BY ClaimCreated DESC`;
-  }
+    // Resolve Foreign Keys -------------------
+    table = `(${table} INNER JOIN Users ON Claims.ClaimUserID=Users.UserID INNER JOIN Claimstatus ON Claims.ClaimClaimstatusID=Claimstatus.ClaimstatusID)`;
+    fields = [
+      ...fields,
+      "ClaimCreated",
+      "ClaimstatusName",
+      "CONCAT(Users.UserFirstname, ' ', Users.UserLastname) AS ClaimUserName",
+    ];
 
-  return { sql: sql, data: { ID: id } };
+    // Process request queries ----------------
+    const allowedQueryFields = [
+      ...model.mutableFields,
+      "ClaimCreated",
+      "ClaimstatusName",
+      "ClaimUserName",
+    ];
+    const [filter, orderby] = parseRequestQuery(req, allowedQueryFields);
+
+    // Construct prepared statement -----------
+    let where = null;
+    let parameters = {};
+    switch (variant) {
+      case "primary":
+        where = "ClaimID=:ID";
+        parameters = { ID: parseInt(req.params.id) };
+        break;
+      case "users":
+        where = "Claims.ClaimUserID=:ID";
+        parameters = { ID: parseInt(req.params.id) };
+        break;
+      case "claimstatus":
+        where = "Claims.ClaimClaimstatusID=:ID";
+        parameters = { ID: parseInt(req.params.id) };
+        break;
+    }
+
+    return constructPreparedStatement(
+      fields,
+      table,
+      where,
+      parameters,
+      filter,
+      orderby,
+    );
+  },
 };
 
 export default model;

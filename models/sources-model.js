@@ -1,40 +1,62 @@
-const model = {};
+import { parseRequestQuery, constructPreparedStatement } from "./utils.js";
 
-model.table = "Sources";
-model.mutableFields = [
-  "SourceDescription",
-  "SourceClaimID",
-  "SourceSourcetypeID",
-  "SourceURL",
-  "SourceFilename",
-  "SourceFilepath",
-  "SourceFiletype",
-  "SourceFilesize",
-];
-model.idField = "SourceID";
-model.buildReadQuery = (id, variant) => {
-  let sql = "";
-  const resolvedTable =
-    "Sources INNER JOIN Claims ON Sources.SourceClaimID=Claims.ClaimID INNER JOIN Sourcetypes ON Sources.SourceSourcetypeID=Sourcetypes.SourcetypeID";
-  const resolvedFields = [
-    model.idField,
-    ...model.mutableFields,
-    "SourceCreated",
-    "SourcetypeName",
-    "ClaimDescription",
-  ];
+const model = {
+  table: "Sources",
+  idField: "SourceID",
+  mutableFields: [
+    "SourceDescription",
+    "SourceClaimID",
+    "SourceSourcetypeID",
+    "SourceURL",
+    "SourceFilename",
+    "SourceFilepath",
+    "SourceFiletype",
+    "SourceFilesize",
+  ],
 
-  switch (variant) {
-    case "claims":
-      sql = `SELECT ${resolvedFields} FROM ${resolvedTable} WHERE SourceClaimID = :ID ORDER BY SourceCreated DESC`;
-      break;
-    default:
-      sql = `SELECT ${resolvedFields} FROM ${resolvedTable}`;
-      if (id) sql += ` WHERE ${model.idField} = :ID`;
-      sql += ` ORDER BY SourceCreated DESC`;
-  }
+  buildReadQuery: (req, variant) => {
+    // Initialisations ------------------------
+    let [table, fields] = [
+      model.table,
+      [model.idField, ...model.mutableFields],
+    ];
 
-  return { sql: sql, data: { ID: id } };
+    // Resolve Foreign Keys -------------------
+    table = `(${table} INNER JOIN Claims ON Sources.SourceClaimID=Claims.ClaimID INNER JOIN Sourcetypes ON Sources.SourceSourcetypeID=Sourcetypes.SourcetypeID)`;
+    fields = [...fields, "SourceCreated", "SourcetypeName", "ClaimDescription"];
+
+    // Process request queries ----------------
+    const allowedQueryFields = [
+      ...model.mutableFields,
+      "SourceCreated",
+      "SourcetypeName",
+      "ClaimDescription",
+    ];
+    const [filter, orderby] = parseRequestQuery(req, allowedQueryFields);
+
+    // Construct prepared statement -----------
+    let where = null;
+    let parameters = {};
+    switch (variant) {
+      case "primary":
+        where = "SourceID=:ID";
+        parameters = { ID: parseInt(req.params.id) };
+        break;
+      case "claims":
+        where = "SourceClaimID=:ID";
+        parameters = { ID: parseInt(req.params.id) };
+        break;
+    }
+
+    return constructPreparedStatement(
+      fields,
+      table,
+      where,
+      parameters,
+      filter,
+      orderby,
+    );
+  },
 };
 
 export default model;
