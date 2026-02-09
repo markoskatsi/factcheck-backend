@@ -32,7 +32,9 @@ const postSourcesController = async (req, res) => {
   }
 
   // Access database
-  const { isSuccess, result, message } = await accessor.create(record);
+  const { isSuccess, result, message } = await accessor.create({
+    body: record,
+  });
   if (!isSuccess) return res.status(404).json({ message });
   // Response to request
   res.status(201).json(result);
@@ -63,7 +65,10 @@ const putSourcesController = async (req, res) => {
   }
 
   // Access database
-  const { isSuccess, result, message } = await accessor.update(record, id);
+  const { isSuccess, result, message } = await accessor.update({
+    body: record,
+    params: { id },
+  });
   if (!isSuccess) return res.status(400).json({ message });
 
   // Response to request
@@ -75,7 +80,7 @@ const controller = new Controller(accessor);
 const router = Router();
 
 router.get("/", (req, res) => controller.get(req, res, null));
-router.get("/:id", (req, res) => controller.get(req, res, null));
+router.get("/:id", (req, res) => controller.get(req, res, "primary"));
 router.get("/claims/:id", (req, res) => controller.get(req, res, "claims"));
 router.post("/", upload.single("file"), postSourcesController);
 router.put("/:id", upload.single("file"), putSourcesController);

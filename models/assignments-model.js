@@ -18,10 +18,10 @@ const model = {
       ...fields,
       "AssignmentCreated",
       "CONCAT(Users.UserFirstname, ' ', Users.UserLastname) AS AssignedUserName",
-      "Claims.ClaimTitle AS ClaimTitle",
-      "Claims.ClaimDescription AS ClaimDescription",
-      "Claims.ClaimCreated AS ClaimCreated",
-      "Claimstatus.ClaimstatusName AS ClaimstatusName",
+      "ClaimTitle",
+      "ClaimDescription",
+      "ClaimCreated",
+      "ClaimstatusName",
     ];
 
     // Process request queries ----------------

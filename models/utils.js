@@ -1,8 +1,8 @@
 export const parseRequestQuery = (req, allowedFields) => {
   let ordering = null;
   let filter = { sql: "", parameters: {} };
-  console.log("req.query:", req.query);
-  console.log("allowedFields:", allowedFields);
+  // console.log("req.query:", req.query);
+  // console.log("allowedFields:", allowedFields);
   for (const key in req.query)
     switch (true) {
       case allowedFields.includes(key):

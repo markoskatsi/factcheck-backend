@@ -18,6 +18,6 @@ const controller = new Controller(accessor);
 const router = Router();
 
 router.get("/", (req, res) => controller.get(req, res, null));
-router.get("/:id", (req, res) => controller.get(req, res, null));
+router.get("/:id", (req, res) => controller.get(req, res, "primary"));
 
 export default router;

@@ -19,7 +19,7 @@ const router = Router();
 
 router.post("/", controller.post);
 router.get("/", (req, res) => controller.get(req, res, null));
-router.get("/:id", (req, res) => controller.get(req, res, null));
+router.get("/:id", (req, res) => controller.get(req, res, "primary"));
 router.get("/users/:id", (req, res) => controller.get(req, res, "users"));
 router.get("/claims/:id", (req, res) => controller.get(req, res, "claims"));
 router.put("/:id", controller.put);
