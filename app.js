@@ -9,6 +9,7 @@ import usersRouter from "./routers/users-router.js";
 import usertypesRouter from "./routers/usertypes-router.js";
 import assignmentsRouter from "./routers/assignments-router.js";
 import evidencetypesRouter from "./routers/evidencetypes-router.js";
+import evidenceRouter from "./routers/evidence-router.js";
 
 // Configure express app and multer-------------------
 const app = express();
@@ -105,6 +106,7 @@ app.use("/api/users", usersRouter);
 app.use("/api/usertypes", usertypesRouter);
 app.use("/api/assignments", assignmentsRouter);
 app.use("/api/evidencetypes", evidencetypesRouter);
+app.use("/api/evidence", evidenceRouter);
 app.get("/api", showApiInfo);
 // Start server ----------------------------
 const PORT = process.env.PORT || 5000;
