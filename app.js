@@ -8,6 +8,7 @@ import sourcetypesRouter from "./routers/sourcetypes-router.js";
 import usersRouter from "./routers/users-router.js";
 import usertypesRouter from "./routers/usertypes-router.js";
 import assignmentsRouter from "./routers/assignments-router.js";
+import evidencetypesRouter from "./routers/evidencetypes-router.js";
 
 // Configure express app and multer-------------------
 const app = express();
@@ -103,6 +104,7 @@ app.use("/api/sourcetypes", sourcetypesRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/usertypes", usertypesRouter);
 app.use("/api/assignments", assignmentsRouter);
+app.use("/api/evidencetypes", evidencetypesRouter);
 app.get("/api", showApiInfo);
 // Start server ----------------------------
 const PORT = process.env.PORT || 5000;
