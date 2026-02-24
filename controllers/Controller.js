@@ -9,14 +9,24 @@ class Controller {
   post = async (req, res) => {
     const record = req.body;
     // Validate request
-    const recordSchema = joi.object({
-      ClaimID: joi.number().integer(),
-      ClaimTitle: joi.string().min(8).required(),
-      ClaimDescription: joi.string().min(20).required(),
-      ClaimUserID: joi.number().integer(),
-      ClaimClaimstatusID: joi.number().integer(),
-    }).required();
-    const { error } = recordSchema.validate(record, { abortEarly: false });
+    const mutableFields = [
+      "ClaimTitle",
+      "ClaimDescription",
+      "ClaimUserID",
+      "ClaimClaimstatusID",
+    ];
+    const recordSchema = joi
+      .object({
+        ClaimID: joi.number().integer(),
+        ClaimTitle: joi.string().min(8).required(),
+        ClaimDescription: joi.string().min(20).required(),
+        ClaimUserID: joi.number().integer(),
+        ClaimClaimstatusID: joi.number().integer(),
+      })
+      .required()
+      .unknown(true);
+    const postSchema = recordSchema.and(...mutableFields);
+    const { error } = postSchema.validate(record, { abortEarly: false });
     if (error)
       return res.status(404).json({ message: this.reportErrors(error) });
 
@@ -50,7 +60,32 @@ class Controller {
   };
 
   put = async (req, res) => {
+    const id = req.params.id;
+    const record = req.body;
     // Validate request
+    const mutableFields = [
+      "ClaimTitle",
+      "ClaimDescription",
+      "ClaimUserID",
+      "ClaimClaimstatusID",
+    ];
+    const putSchema = joi.object({
+      id: joi.number().integer().min(1).required(),
+      record: joi
+        .object({
+          ClaimID: joi.number().integer(),
+          ClaimTitle: joi.string().min(8),
+          ClaimDescription: joi.string().min(20),
+          ClaimUserID: joi.number().integer(),
+          ClaimClaimstatusID: joi.number().integer(),
+        })
+        .required()
+        .unknown(true)
+        .or(...mutableFields),
+    });
+    const { error } = putSchema.validate({ id, record }, { abortEarly: false });
+    if (error)
+      return res.status(404).json({ message: this.reportErrors(error) });
     // Access database
     const {
       isSuccess,
@@ -63,7 +98,13 @@ class Controller {
   };
 
   delete = async (req, res) => {
+    const id = req.params.id;
     // Validate request
+    const idSchema = joi.number().integer().min(1).required();
+    const deleteSchema = idSchema.required();
+    const { error } = deleteSchema.validate(id, { abortEarly: false });
+    if (error)
+      return res.status(404).json({ message: this.reportErrors(error) });
     // Access database
     const {
       isSuccess,
