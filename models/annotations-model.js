@@ -17,12 +17,13 @@ const model = {
     ];
 
     // Resolve Foreign Keys -------------------
-    table = `(${table} INNER JOIN Assignments ON Annotations.AnnotationAssignmentID=Assignments.AssignmentID INNER JOIN Users ON Assignments.AssignmentUserID=Users.UserID)`;
+    table = `(${table} INNER JOIN Assignments ON Annotations.AnnotationAssignmentID=Assignments.AssignmentID INNER JOIN Users ON Assignments.AssignmentUserID=Users.UserID INNER JOIN Claims ON Assignments.AssignmentClaimID=Claims.ClaimID)`;
     fields = [
       ...fields,
       "AnnotationCreated",
       "Users.UserID AS AnnotationUserID",
       "CONCAT(Users.UserFirstname, ' ', Users.UserLastname) AS AnnotationUsername",
+      "Claims.ClaimID AS AnnotationClaimID",
     ];
 
     // Process request queries ----------------
@@ -30,6 +31,7 @@ const model = {
       ...model.mutableFields,
       "AnnotationCreated",
       "AnnotationUsername",
+      "AnnotationClaimID",
     ];
     const [filter, orderby] = parseRequestQuery(req, allowedQueryFields);
 
@@ -43,6 +45,10 @@ const model = {
         break;
       case "users":
         where = "Assignments.AssignmentUserID=:ID";
+        parameters = { ID: parseInt(req.params.id) };
+        break;
+      case "claims":
+        where = "Claims.ClaimID=:ID";
         parameters = { ID: parseInt(req.params.id) };
         break;
     }
