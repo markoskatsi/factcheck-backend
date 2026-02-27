@@ -1,17 +1,14 @@
 import joi from "joi";
 
-const validator = {};
+const schema = {};
 
-validator.reportErrors = (error) =>
-  error.details.map((detail) => detail.message);
-validator.idSchema = joi.number().integer().min(1);
-validator.mutableFields = [
+schema.mutableFields = [
   "ClaimTitle",
   "ClaimDescription",
   "ClaimUserID",
   "ClaimClaimstatusID",
 ];
-validator.recordSchema = joi
+schema.recordSchema = joi
   .object({
     ClaimID: joi.number().integer(),
     ClaimTitle: joi.string().min(8),
@@ -22,4 +19,4 @@ validator.recordSchema = joi
   .required()
   .unknown(true);
 
-export default validator;
+export default schema;

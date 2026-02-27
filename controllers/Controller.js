@@ -1,5 +1,3 @@
-import joi from "joi";
-
 class Controller {
   constructor(validator, accessor) {
     this.validator = validator;
@@ -9,11 +7,9 @@ class Controller {
   get = async (req, res, variant) => {
     const id = req.params.id;
     // Validate request
-    const { error } = this.validator.idSchema.validate(id);
-    if (error)
-      return res
-        .status(404)
-        .json({ message: this.validator.reportErrors(error) });
+    const { isValid, message: validationMessage } = this.validator.get(id);
+    if (!isValid) return res.status(404).json({ message: validationMessage });
+
     // Access database
     const {
       isSuccess,
@@ -21,6 +17,7 @@ class Controller {
       message: accessorMessage,
     } = await this.accessor.read(req, variant);
     if (!isSuccess) return res.status(400).json({ message: accessorMessage });
+
     // Response to request
     res.status(200).json(result);
   };
@@ -28,14 +25,8 @@ class Controller {
   post = async (req, res) => {
     const record = req.body;
     // Validate request
-    const postSchema = this.validator.recordSchema.and(
-      ...this.validator.mutableFields,
-    );
-    const { error } = postSchema.validate(record, { abortEarly: false });
-    if (error)
-      return res
-        .status(404)
-        .json({ message: this.validator.reportErrors(error) });
+    const { isValid, message: validationMessage } = this.validator.post(record);
+    if (!isValid) return res.status(404).json({ message: validationMessage });
 
     // Access database
     const {
@@ -52,15 +43,12 @@ class Controller {
     const id = req.params.id;
     const record = req.body;
     // Validate request
-    const putSchema = joi.object({
-      id: this.validator.idSchema.required(),
-      record: this.validator.recordSchema.and(...this.validator.mutableFields),
+    const { isValid, message: validationMessage } = this.validator.put({
+      id,
+      record,
     });
-    const { error } = putSchema.validate({ id, record }, { abortEarly: false });
-    if (error)
-      return res
-        .status(404)
-        .json({ message: this.validator.reportErrors(error) });
+    if (!isValid) return res.status(404).json({ message: validationMessage });
+
     // Access database
     const {
       isSuccess,
@@ -68,6 +56,7 @@ class Controller {
       message: accessorMessage,
     } = await this.accessor.update(req);
     if (!isSuccess) return res.status(400).json({ message: accessorMessage });
+
     // Response to request
     res.status(200).json(result);
   };
@@ -75,12 +64,9 @@ class Controller {
   delete = async (req, res) => {
     const id = req.params.id;
     // Validate request
-    const deleteSchema = this.validator.idSchema.required();
-    const { error } = deleteSchema.validate(id, { abortEarly: false });
-    if (error)
-      return res
-        .status(404)
-        .json({ message: this.validator.reportErrors(error) });
+    const { isValid, message: validationMessage } = this.validator.delete(id);
+    if (!isValid) return res.status(404).json({ message: validationMessage });
+
     // Access database
     const {
       isSuccess,
@@ -88,6 +74,7 @@ class Controller {
       message: accessorMessage,
     } = await this.accessor.delete(req);
     if (!isSuccess) return res.status(400).json({ message: accessorMessage });
+
     // Response to request
     res.status(200).json({ message: accessorMessage });
   };

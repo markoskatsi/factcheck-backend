@@ -1,10 +1,14 @@
 import { Router } from "express";
+import Validator from "../validators/Validator.js";
 import database from "../database.js";
 import Model from "../models/Model.js";
 import modelConfig from "../models/claims-model.js";
 import Accessor from "../accessor/Accessor.js";
-import validator from "../validators/claims-validator.js";
+import schema from "../validators/claims-schema.js";
 import Controller from "../controllers/Controller.js";
+
+// Validator --------------------------------------------
+const validator = new Validator(schema);
 
 // Model  -----------------------------------------------
 const model = new Model(modelConfig);
