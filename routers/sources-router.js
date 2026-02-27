@@ -1,11 +1,16 @@
 import upload from "../middleware/upload.js";
 import { Router } from "express";
+import Validator from "../validators/Validator.js";
 import database from "../database.js";
 import cloudinary from "../utils/cloudinary.js";
 import Model from "../models/Model.js";
 import modelConfig from "../models/sources-model.js";
 import Accessor from "../accessor/Accessor.js";
+import schema from "../validators/sources-schema.js";
 import Controller from "../controllers/Controller.js";
+
+// Validator --------------------------------------------
+const validator = new Validator(schema);
 
 // Model ------------------------------------------------
 const model = new Model(modelConfig);
@@ -74,7 +79,7 @@ const putSourcesController = async (req, res) => {
   // Response to request
   res.status(200).json(result);
 };
-const controller = new Controller(accessor);
+const controller = new Controller(validator, accessor);
 
 // Endpoints --------------------------------------------
 const router = Router();
