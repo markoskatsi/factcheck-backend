@@ -1,11 +1,16 @@
 import upload from "../middleware/upload.js";
 import { Router } from "express";
+import Validator from "../validators/Validator.js";
 import database from "../database.js";
 import cloudinary from "../utils/cloudinary.js";
 import Model from "../models/Model.js";
 import modelConfig from "../models/evidence-model.js";
 import Accessor from "../accessor/Accessor.js";
+import schema from "../validators/evidence-schema.js";
 import Controller from "../controllers/Controller.js";
+
+// Validator --------------------------------------------
+const validator = new Validator(schema);
 
 // Model ------------------------------------------------
 const model = new Model(modelConfig);
@@ -53,7 +58,7 @@ const putEvidenceController = async (req, res) => {
         .status(500)
         .json({ message: `Cloudinary upload failed: ${error.message}` });
     }
-  } 
+  }
   // Access database
   const { isSuccess, result, message } = await accessor.update({
     body: record,
@@ -64,14 +69,16 @@ const putEvidenceController = async (req, res) => {
   // Response to request
   res.status(200).json(result);
 };
-const controller = new Controller(accessor);
+const controller = new Controller(validator, accessor);
 
 // Endpoints --------------------------------------------
 const router = Router();
 
 router.get("/", (req, res) => controller.get(req, res, null));
 router.get("/:id", (req, res) => controller.get(req, res, "primary"));
-router.get("/annotations/:id", (req, res) => controller.get(req, res, "annotations"));
+router.get("/annotations/:id", (req, res) =>
+  controller.get(req, res, "annotations"),
+);
 router.post("/", upload.single("file"), postEvidenceController);
 router.put("/:id", upload.single("file"), putEvidenceController);
 router.delete("/:id", controller.delete);
