@@ -4,7 +4,6 @@ const model = {
   table: "Annotations",
   idField: "AnnotationID",
   mutableFields: [
-    "AnnotationTitle",
     "AnnotationDescription",
     "AnnotationAssignmentID",
   ],
