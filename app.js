@@ -3,6 +3,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import validateApiKey from "./middleware/auth.js";
+import showApiInfo from "./controllers/api-info-controller.js";
 import claimsRouter from "./routers/claims-router.js";
 import sourcesRouter from "./routers/sources-router.js";
 import sourcetypesRouter from "./routers/sourcetypes-router.js";
@@ -30,75 +31,6 @@ app.use(cors({ origin: "*" }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Controllers ----------------------------
-const showApiInfo = async (req, res) => {
-  res.status(200).json({
-    message: "List of available endpoints",
-    endpoints: [
-      {
-        entity: "Claims",
-        path: "/api/claims",
-        methods: ["GET", "POST", "PUT", "DELETE"],
-      },
-      {
-        entity: "Claims by Users",
-        path: "/api/claims/users/:id",
-        methods: ["GET"],
-      },
-      {
-        entity: "Claims by Status",
-        path: "/api/claims/claimstatus/:id",
-        methods: ["GET"],
-      },
-      {
-        entity: "Sources",
-        path: "/api/sources",
-        methods: ["GET", "POST", "PUT", "DELETE"],
-      },
-      {
-        entity: "Sources by claim",
-        path: "/api/sources/claims/:id",
-        methods: ["GET"],
-      },
-      {
-        entity: "Source Types",
-        path: "/api/sourcetypes",
-        methods: ["GET"],
-      },
-      {
-        entity: "Users",
-        path: "/api/users",
-        methods: ["GET"],
-      },
-      {
-        entity: "Users by User Types",
-        path: "/api/users/usertypes/:id",
-        methods: ["GET"],
-      },
-      {
-        entity: "User Types",
-        path: "/api/usertypes",
-        methods: ["GET"],
-      },
-      {
-        entity: "Assignments",
-        path: "/api/assignments",
-        methods: ["GET", "POST", "PUT", "DELETE"],
-      },
-      {
-        entity: "Assignments by claim",
-        path: "/api/assignments/claims/:id",
-        methods: ["GET"],
-      },
-      {
-        entity: "Assignments by user",
-        path: "/api/assignments/users/:id",
-        methods: ["GET"],
-      },
-    ],
-  });
-};
 
 // Endpoints ------------------------------
 
