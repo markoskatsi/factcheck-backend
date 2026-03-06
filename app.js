@@ -2,6 +2,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import validateApiKey from "./middleware/auth.js";
 import claimsRouter from "./routers/claims-router.js";
 import sourcesRouter from "./routers/sources-router.js";
 import sourcetypesRouter from "./routers/sourcetypes-router.js";
@@ -20,7 +21,7 @@ app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
     "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept",
+    "Origin, X-Requested-With, Content-Type, Accept, x-api-key",
   );
   next();
 });
@@ -100,16 +101,21 @@ const showApiInfo = async (req, res) => {
 };
 
 // Endpoints ------------------------------
-app.use("/api/claims", claimsRouter);
-app.use("/api/sources", sourcesRouter);
-app.use("/api/sourcetypes", sourcetypesRouter);
-app.use("/api/users", usersRouter);
-app.use("/api/usertypes", usertypesRouter);
-app.use("/api/assignments", assignmentsRouter);
-app.use("/api/evidencetypes", evidencetypesRouter);
-app.use("/api/evidence", evidenceRouter);
-app.use("/api/annotations", annotationsRouter);
+
+// Public
 app.get("/api", showApiInfo);
+
+// Protected
+app.use("/api/claims", validateApiKey, claimsRouter);
+app.use("/api/sources", validateApiKey, sourcesRouter);
+app.use("/api/sourcetypes", validateApiKey, sourcetypesRouter);
+app.use("/api/users", validateApiKey, usersRouter);
+app.use("/api/usertypes", validateApiKey, usertypesRouter);
+app.use("/api/assignments", validateApiKey, assignmentsRouter);
+app.use("/api/evidencetypes", validateApiKey, evidencetypesRouter);
+app.use("/api/evidence", validateApiKey, evidenceRouter);
+app.use("/api/annotations", validateApiKey, annotationsRouter);
+
 // Start server ----------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
