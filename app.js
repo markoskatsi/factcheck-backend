@@ -14,6 +14,7 @@ import evidencetypesRouter from "./routers/evidencetypes-router.js";
 import evidenceRouter from "./routers/evidence-router.js";
 import annotationsRouter from "./routers/annotations-router.js";
 import verdictsRouter from "./routers/verdicts-router.js";
+import claimstatusRouter from "./routers/claimstatus-router.js";
 
 // Configure express app and multer-------------------
 const app = express();
@@ -49,6 +50,7 @@ app.use("/api/evidencetypes", validateApiKey, evidencetypesRouter);
 app.use("/api/evidence", validateApiKey, evidenceRouter);
 app.use("/api/annotations", validateApiKey, annotationsRouter);
 app.use("/api/verdicts", validateApiKey, verdictsRouter);
+app.use("/api/claimstatus", validateApiKey, claimstatusRouter);
 
 // Start server ----------------------------
 const PORT = process.env.PORT || 5000;
