@@ -13,7 +13,7 @@ const model = {
     ];
 
     // Resolve Foreign Keys -------------------
-    table = `(${table} INNER JOIN Users ON Assignments.AssignmentUserID=Users.UserID INNER JOIN Claims ON Assignments.AssignmentClaimID=Claims.ClaimID INNER JOIN Claimstatus ON Claims.ClaimClaimstatusID=Claimstatus.ClaimstatusID)`;
+    table = `(${table} INNER JOIN Users ON Assignments.AssignmentUserID=Users.UserID INNER JOIN Claims ON Assignments.AssignmentClaimID=Claims.ClaimID INNER JOIN Claimstatus ON Claims.ClaimClaimstatusID=Claimstatus.ClaimstatusID INNER JOIN Usertypes ON Users.UserUsertypeID=Usertypes.UsertypeID)`;
     fields = [
       ...fields,
       "AssignmentCreated",
@@ -22,6 +22,8 @@ const model = {
       "ClaimDescription",
       "ClaimCreated",
       "ClaimstatusName",
+      "UsertypeName",
+      "UserUsertypeID",
     ];
 
     // Process request queries ----------------
@@ -33,6 +35,8 @@ const model = {
       "ClaimDescription",
       "ClaimCreated",
       "ClaimstatusName",
+      "UsertypeName",
+      "UserUsertypeID",
     ];
     const [filter, orderby] = parseRequestQuery(req, allowedQueryFields);
 
