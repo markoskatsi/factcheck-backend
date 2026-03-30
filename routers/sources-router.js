@@ -2,7 +2,6 @@ import upload from "../middleware/upload.js";
 import { Router } from "express";
 import Validator from "../validators/Validator.js";
 import database from "../database.js";
-import cloudinary from "../utils/cloudinary.js";
 import Model from "../models/Model.js";
 import modelConfig from "../models/sources-model.js";
 import Accessor from "../accessor/Accessor.js";
@@ -19,66 +18,6 @@ const model = new Model(modelConfig);
 const accessor = new Accessor(model, database);
 
 // Controllers ------------------------------------------
-const postSourcesController = async (req, res) => {
-  const record = req.body;
-  // Validate request
-  if (req.file) {
-    try {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path);
-      record.SourceFilename = req.file.originalname;
-      record.SourceFilepath = uploadResult.secure_url;
-      record.SourceFiletype = req.file.mimetype;
-      record.SourceFilesize = req.file.size;
-    } catch (error) {
-      return res
-        .status(500)
-        .json({ message: `Cloudinary upload failed: ${error.message}` });
-    }
-  }
-
-  // Access database
-  const { isSuccess, result, message } = await accessor.create({
-    body: record,
-  });
-  if (!isSuccess) return res.status(404).json({ message });
-  // Response to request
-  res.status(201).json(result);
-};
-
-const putSourcesController = async (req, res) => {
-  const id = req.params.id;
-  const record = req.body;
-  // Validate request
-  if (req.file) {
-    try {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path);
-      record.SourceFilename = req.file.originalname;
-      record.SourceFilepath = uploadResult.secure_url;
-      record.SourceFiletype = req.file.mimetype;
-      record.SourceFilesize = req.file.size;
-      record.SourceURL = null;
-    } catch (error) {
-      return res
-        .status(500)
-        .json({ message: `Cloudinary upload failed: ${error.message}` });
-    }
-  } else if (record.SourceURL) {
-    record.SourceFilename = null;
-    record.SourceFilepath = null;
-    record.SourceFiletype = null;
-    record.SourceFilesize = null;
-  }
-
-  // Access database
-  const { isSuccess, result, message } = await accessor.update({
-    body: record,
-    params: { id },
-  });
-  if (!isSuccess) return res.status(400).json({ message });
-
-  // Response to request
-  res.status(200).json(result);
-};
 const controller = new Controller(validator, accessor);
 
 // Endpoints --------------------------------------------

@@ -78,7 +78,6 @@ class Controller {
       req.body[`${variant}Filetype`] = null;
       req.body[`${variant}Filesize`] = null;
     }
-    
 
     // Validate request
     const { isValid, message: validationMessage } = this.validator.put({
