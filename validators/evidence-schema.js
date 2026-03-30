@@ -7,8 +7,6 @@ schema.mutableFields = [
   "EvidenceAnnotationID",
   "EvidenceEvidencetypeID",
   "EvidenceURL",
-  "EvidenceFilename",
-  "EvidenceFilepath",
 ];
 schema.recordSchema = joi
   .object({
