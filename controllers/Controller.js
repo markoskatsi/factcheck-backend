@@ -1,3 +1,5 @@
+import cloudinary from "../utils/cloudinary.js";
+
 class Controller {
   constructor(validator, accessor) {
     this.validator = validator;
@@ -22,20 +24,34 @@ class Controller {
     res.status(200).json(result);
   };
 
-  post = async (req, res) => {
-    const record = req.body;
-    // Validate request
-    const { isValid, message: validationMessage } = this.validator.post(record);
-    if (!isValid) return res.status(404).json({ message: validationMessage });
+  post = async (req, res, variant) => {
+    if (req.file) {
+      try {
+        const uploadResult = await cloudinary.uploader.upload(req.file.path);
+        req.body[`${variant}Filename`] = req.file.originalname;
+        req.body[`${variant}Filepath`] = uploadResult.secure_url;
+        req.body[`${variant}Filetype`] = req.file.mimetype;
+        req.body[`${variant}Filesize`] = req.file.size;
+        req.body[`${variant}URL`] = null;
+      } catch (error) {
+        return res
+          .status(500)
+          .json({ message: `Cloudinary upload failed: ${error.message}` });
+      }
+    }
 
-    // Access database
+    const { isValid, message: validationMessage } = this.validator.post(
+      req.body,
+    );
+    if (!isValid) return res.status(400).json({ message: validationMessage });
+
     const {
       isSuccess,
       result,
       message: accessorMessage,
     } = await this.accessor.create(req);
-    if (!isSuccess) return res.status(404).json({ message: accessorMessage });
-    // Response to request
+    if (!isSuccess) return res.status(500).json({ message: accessorMessage });
+
     res.status(201).json(result);
   };
 

@@ -79,7 +79,9 @@ router.get("/:id", (req, res) => controller.get(req, res, "primary"));
 router.get("/annotations/:id", (req, res) =>
   controller.get(req, res, "annotations"),
 );
-router.post("/", upload.single("file"), postEvidenceController);
+router.post("/", upload.single("file"), (req, res) =>
+  controller.post(req, res, "Evidence"),
+);
 router.put("/:id", upload.single("file"), putEvidenceController);
 router.delete("/:id", controller.delete);
 
