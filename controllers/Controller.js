@@ -55,9 +55,31 @@ class Controller {
     res.status(201).json(result);
   };
 
-  put = async (req, res) => {
+  put = async (req, res, variant) => {
     const id = req.params.id;
     const record = req.body;
+
+    if (req.file) {
+      try {
+        const uploadResult = await cloudinary.uploader.upload(req.file.path);
+        req.body[`${variant}Filename`] = req.file.originalname;
+        req.body[`${variant}Filepath`] = uploadResult.secure_url;
+        req.body[`${variant}Filetype`] = req.file.mimetype;
+        req.body[`${variant}Filesize`] = req.file.size;
+        req.body[`${variant}URL`] = null;
+      } catch (error) {
+        return res
+          .status(500)
+          .json({ message: `Cloudinary upload failed: ${error.message}` });
+      }
+    } else if (record[`${variant}URL`]) {
+      req.body[`${variant}Filename`] = null;
+      req.body[`${variant}Filepath`] = null;
+      req.body[`${variant}Filetype`] = null;
+      req.body[`${variant}Filesize`] = null;
+    }
+    
+
     // Validate request
     const { isValid, message: validationMessage } = this.validator.put({
       id,

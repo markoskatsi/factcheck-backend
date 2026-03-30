@@ -88,7 +88,7 @@ router.get("/", (req, res) => controller.get(req, res, null));
 router.get("/:id", (req, res) => controller.get(req, res, "primary"));
 router.get("/claims/:id", (req, res) => controller.get(req, res, "claims"));
 router.post("/", upload.single("file"), (req, res) => controller.post(req, res, "Source"));
-router.put("/:id", upload.single("file"), (req, res) => controller.put(req, res));
+router.put("/:id", upload.single("file"), (req, res) => controller.put(req, res, "Source"));
 router.delete("/:id", controller.delete);
 
 export default router;

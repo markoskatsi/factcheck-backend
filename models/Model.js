@@ -23,7 +23,7 @@ class Model {
   };
 
   buildUpdateQuery = (req) => {
-    const allowedRecordFields = this.mutableFields.filter((field) => req.body.hasOwnProperty(field));
+    const allowedRecordFields = this.mutableFields.filter((field) => Object.hasOwn(req.body, field));
     const sql =
       `UPDATE ${this.table}` +
       this.buildSetFields(allowedRecordFields) +
