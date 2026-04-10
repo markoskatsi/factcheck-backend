@@ -23,9 +23,9 @@ const model = {
     return constructPreparedStatement(
       fields,
       table,
-      filter,
       where,
       parameters,
+      filter,
       orderby,
     );
   },
