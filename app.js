@@ -16,6 +16,7 @@ import annotationsRouter from "./routers/annotations-router.js";
 import verdictsRouter from "./routers/verdicts-router.js";
 import claimstatusRouter from "./routers/claimstatus-router.js";
 import verdictstatusRouter from "./routers/verdictstatus-router.js";
+import disputesRouter from "./routers/disputetypes-router.js";
 
 // Configure express app and multer-------------------
 const app = express();
@@ -53,6 +54,7 @@ app.use("/api/annotations", validateApiKey, annotationsRouter);
 app.use("/api/verdicts", validateApiKey, verdictsRouter);
 app.use("/api/claimstatus", validateApiKey, claimstatusRouter);
 app.use("/api/verdictstatus", validateApiKey, verdictstatusRouter);
+app.use("/api/disputetypes", validateApiKey, disputesRouter);
 
 // Start server ----------------------------
 const PORT = process.env.PORT || 5000;
