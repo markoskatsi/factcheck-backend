@@ -26,7 +26,7 @@ const model = {
       filter,
       where,
       parameters,
-      orderby
+      orderby,
     );
   },
 };
