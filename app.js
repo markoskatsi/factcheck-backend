@@ -16,8 +16,9 @@ import annotationsRouter from "./routers/annotations-router.js";
 import verdictsRouter from "./routers/verdicts-router.js";
 import claimstatusRouter from "./routers/claimstatus-router.js";
 import verdictstatusRouter from "./routers/verdictstatus-router.js";
-import disputesRouter from "./routers/disputetypes-router.js";
+import disputetypesRouter from "./routers/disputetypes-router.js";
 import rolesRouter from "./routers/roles-router.js";
+import disputesRouter from "./routers/disputes-router.js";
 
 // Configure express app and multer-------------------
 const app = express();
@@ -55,9 +56,8 @@ app.use("/api/annotations", validateApiKey, annotationsRouter);
 app.use("/api/verdicts", validateApiKey, verdictsRouter);
 app.use("/api/claimstatus", validateApiKey, claimstatusRouter);
 app.use("/api/verdictstatus", validateApiKey, verdictstatusRouter);
-app.use("/api/disputetypes", validateApiKey, disputesRouter);
-
-// Roles
+app.use("/api/disputetypes", validateApiKey, disputetypesRouter);
+app.use("/api/disputes", validateApiKey, disputesRouter);
 app.use("/api/roles", validateApiKey, rolesRouter);
 
 // Start server ----------------------------
