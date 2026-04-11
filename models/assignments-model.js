@@ -3,7 +3,7 @@ import { parseRequestQuery, constructPreparedStatement } from "./utils.js";
 const model = {
   table: "Assignments",
   idField: "AssignmentID",
-  mutableFields: ["AssignmentUserID", "AssignmentClaimID"],
+  mutableFields: ["AssignmentUserID", "AssignmentClaimID", "AssignmentRoleID"],
 
   buildReadQuery: (req, variant) => {
     // Initialisations ------------------------
@@ -13,7 +13,7 @@ const model = {
     ];
 
     // Resolve Foreign Keys -------------------
-    table = `(${table} INNER JOIN Users ON Assignments.AssignmentUserID=Users.UserID INNER JOIN Claims ON Assignments.AssignmentClaimID=Claims.ClaimID INNER JOIN Claimstatus ON Claims.ClaimClaimstatusID=Claimstatus.ClaimstatusID INNER JOIN Usertypes ON Users.UserUsertypeID=Usertypes.UsertypeID)`;
+    table = `(${table} INNER JOIN Users ON Assignments.AssignmentUserID=Users.UserID INNER JOIN Claims ON Assignments.AssignmentClaimID=Claims.ClaimID INNER JOIN Claimstatus ON Claims.ClaimClaimstatusID=Claimstatus.ClaimstatusID INNER JOIN Usertypes ON Users.UserUsertypeID=Usertypes.UsertypeID INNER JOIN Roles ON Assignments.AssignmentRoleID=Roles.RoleID)`;
     fields = [
       ...fields,
       "AssignmentCreated",
@@ -24,6 +24,8 @@ const model = {
       "ClaimstatusName",
       "UsertypeName",
       "UserUsertypeID",
+      "RoleName",
+      "RoleID",
     ];
 
     // Process request queries ----------------
@@ -37,6 +39,7 @@ const model = {
       "ClaimstatusName",
       "UsertypeName",
       "UserUsertypeID",
+      "RoleName",
     ];
     const [filter, orderby] = parseRequestQuery(req, allowedQueryFields);
 
@@ -54,6 +57,10 @@ const model = {
         break;
       case "users":
         where = "Assignments.AssignmentUserID=:ID";
+        parameters = { ID: parseInt(req.params.id) };
+        break;
+      case "roles":
+        where = "Assignments.AssignmentRoleID=:ID";
         parameters = { ID: parseInt(req.params.id) };
         break;
     }

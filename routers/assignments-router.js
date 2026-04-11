@@ -27,6 +27,7 @@ router.get("/", (req, res) => controller.get(req, res, null));
 router.get("/:id", (req, res) => controller.get(req, res, "primary"));
 router.get("/users/:id", (req, res) => controller.get(req, res, "users"));
 router.get("/claims/:id", (req, res) => controller.get(req, res, "claims"));
+router.get("/roles/:id", (req, res) => controller.get(req, res, "roles"));
 router.put("/:id", controller.put);
 router.delete("/:id", controller.delete);
 
