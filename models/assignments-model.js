@@ -13,7 +13,7 @@ const model = {
     ];
 
     // Resolve Foreign Keys -------------------
-    table = `(${table} INNER JOIN Users ON Assignments.AssignmentUserID=Users.UserID INNER JOIN Claims ON Assignments.AssignmentClaimID=Claims.ClaimID INNER JOIN Claimstatus ON Claims.ClaimClaimstatusID=Claimstatus.ClaimstatusID INNER JOIN Usertypes ON Users.UserUsertypeID=Usertypes.UsertypeID INNER JOIN Roles ON Assignments.AssignmentRoleID=Roles.RoleID)`;
+    table = `(${table} INNER JOIN Users ON Assignments.AssignmentUserID=Users.UserID INNER JOIN Claims ON Assignments.AssignmentClaimID=Claims.ClaimID INNER JOIN Claimstatus ON Claims.ClaimClaimstatusID=Claimstatus.ClaimstatusID INNER JOIN Usertypes ON Users.UserUsertypeID=Usertypes.UsertypeID LEFT JOIN Roles ON Assignments.AssignmentRoleID=Roles.RoleID)`;
     fields = [
       ...fields,
       "AssignmentCreated",
