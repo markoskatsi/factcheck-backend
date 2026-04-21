@@ -38,6 +38,11 @@ class Controller {
           .status(500)
           .json({ message: `Cloudinary upload failed: ${error.message}` });
       }
+    } else if (variant && req.body[`${variant}URL`]) {
+      req.body[`${variant}Filename`] = null;
+      req.body[`${variant}Filepath`] = null;
+      req.body[`${variant}Filetype`] = null;
+      req.body[`${variant}Filesize`] = null;
     }
 
     const { isValid, message: validationMessage } = this.validator.post(
