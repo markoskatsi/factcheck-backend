@@ -1,14 +1,19 @@
-const validateApiKey = (req, res, next) => {
-  const apiKey = req.headers['x-api-key'];
-  
-  if (apiKey && apiKey === process.env.API_SECRET_KEY) {
+import jwt from "jsonwebtoken";
+
+const validateJwt = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.startsWith("Bearer ") && authHeader.slice(7);
+
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorised", message: "Valid token required" });
+  }
+
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
     next();
-  } else {
-    res.status(401).json({ 
-      error: 'Unauthorised',
-      message: 'Valid API key required with your request'
-    });
+  } catch {
+    res.status(401).json({ error: "Unauthorised", message: "Invalid or expired token" });
   }
 };
 
-export default validateApiKey;
+export default validateJwt;

@@ -11,11 +11,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cloudinary": "^2.8.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "joi": "^18.0.2",
+    "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",
     "mysql2": "^3.15.2"
   },

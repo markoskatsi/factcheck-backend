@@ -2,7 +2,8 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import validateApiKey from "./middleware/auth.js";
+import validateJwt from "./middleware/auth.js";
+import authRouter from "./routers/auth-router.js";
 import showApiInfo from "./controllers/api-info-controller.js";
 import claimsRouter from "./routers/claims-router.js";
 import sourcesRouter from "./routers/sources-router.js";
@@ -28,7 +29,7 @@ app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header(
     "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, x-api-key",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization",
   );
   next();
 });
@@ -42,23 +43,24 @@ app.use(express.urlencoded({ extended: true }));
 
 // Public
 app.get("/api", showApiInfo);
+app.use("/api/auth", authRouter);
 
 // Protected
-app.use("/api/claims", validateApiKey, claimsRouter);
-app.use("/api/sources", validateApiKey, sourcesRouter);
-app.use("/api/sourcetypes", validateApiKey, sourcetypesRouter);
-app.use("/api/users", validateApiKey, usersRouter);
-app.use("/api/usertypes", validateApiKey, usertypesRouter);
-app.use("/api/assignments", validateApiKey, assignmentsRouter);
-app.use("/api/evidencetypes", validateApiKey, evidencetypesRouter);
-app.use("/api/evidence", validateApiKey, evidenceRouter);
-app.use("/api/annotations", validateApiKey, annotationsRouter);
-app.use("/api/verdicts", validateApiKey, verdictsRouter);
-app.use("/api/claimstatus", validateApiKey, claimstatusRouter);
-app.use("/api/verdictstatus", validateApiKey, verdictstatusRouter);
-app.use("/api/disputetypes", validateApiKey, disputetypesRouter);
-app.use("/api/disputes", validateApiKey, disputesRouter);
-app.use("/api/roles", validateApiKey, rolesRouter);
+app.use("/api/claims", validateJwt, claimsRouter);
+app.use("/api/sources", validateJwt, sourcesRouter);
+app.use("/api/sourcetypes", validateJwt, sourcetypesRouter);
+app.use("/api/users", usersRouter);
+app.use("/api/usertypes", validateJwt, usertypesRouter);
+app.use("/api/assignments", validateJwt, assignmentsRouter);
+app.use("/api/evidencetypes", validateJwt, evidencetypesRouter);
+app.use("/api/evidence", validateJwt, evidenceRouter);
+app.use("/api/annotations", validateJwt, annotationsRouter);
+app.use("/api/verdicts", validateJwt, verdictsRouter);
+app.use("/api/claimstatus", validateJwt, claimstatusRouter);
+app.use("/api/verdictstatus", validateJwt, verdictstatusRouter);
+app.use("/api/disputetypes", validateJwt, disputetypesRouter);
+app.use("/api/disputes", validateJwt, disputesRouter);
+app.use("/api/roles", validateJwt, rolesRouter);
 
 // Start server ----------------------------
 const PORT = process.env.PORT || 5000;

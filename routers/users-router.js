@@ -6,6 +6,8 @@ import modelConfig from "../models/users-model.js";
 import Accessor from "../accessor/Accessor.js";
 import schema from "../validators/users-schema.js";
 import Controller from "../controllers/Controller.js";
+import hashPassword from "../middleware/hashPassword.js";
+import validateJwt from "../middleware/auth.js";
 
 // Validator --------------------------------------------
 const validator = new Validator(schema);
@@ -22,13 +24,13 @@ const controller = new Controller(validator, accessor);
 // Endpoints --------------------------------------------
 const router = Router();
 
-router.get("/", (req, res) => controller.get(req, res, null));
-router.get("/:id", (req, res) => controller.get(req, res, "primary"));
-router.get("/usertypes/:id", (req, res) =>
+router.get("/", validateJwt, (req, res) => controller.get(req, res, null));
+router.get("/:id", validateJwt, (req, res) => controller.get(req, res, "primary"));
+router.get("/usertypes/:id", validateJwt, (req, res) =>
   controller.get(req, res, "usertype"),
 );
-router.post("/", controller.post);
-router.put("/:id", controller.put);
-router.delete("/:id", controller.delete);
+router.post("/", hashPassword, controller.post);
+router.put("/:id", validateJwt, hashPassword, controller.put);
+router.delete("/:id", validateJwt, controller.delete);
 
 export default router;

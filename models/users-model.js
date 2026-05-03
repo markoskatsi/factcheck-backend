@@ -7,6 +7,7 @@ const model = {
     "UserFirstname",
     "UserLastname",
     "UserEmail",
+    "UserPassword",
     "UserImageURL",
     "UserUsertypeID",
   ],

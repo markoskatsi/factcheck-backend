@@ -6,6 +6,7 @@ schema.mutableFields = [
   "UserFirstname",
   "UserLastname",
   "UserEmail",
+  "UserPassword",
   "UserUsertypeID",
 ];
 schema.recordSchema = joi
@@ -14,6 +15,7 @@ schema.recordSchema = joi
     UserFirstname: joi.string().min(2),
     UserLastname: joi.string().min(2),
     UserEmail: joi.string().email(),
+    UserPassword: joi.string().min(8),
     UserUsertypeID: joi.number().integer(),
   })
   .required()
