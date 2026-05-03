@@ -14,7 +14,7 @@ router.post("/login", async (req, res) => {
 
   try {
     const [rows] = await database.query(
-      "SELECT UserID, UserUsertypeID, UserPassword FROM Users WHERE UserEmail = :email",
+      "SELECT UserID, UserUsertypeID, UserPassword, UserFirstname, UserEmail FROM Users WHERE UserEmail = :email",
       { email: UserEmail },
     );
     if (rows.length === 0) {
@@ -27,7 +27,12 @@ router.post("/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { UserID: user.UserID, UserUsertypeID: user.UserUsertypeID },
+      {
+        UserID: user.UserID,
+        UserUsertypeID: user.UserUsertypeID,
+        UserFirstname: user.UserFirstname,
+        UserEmail: user.UserEmail,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1d" },
     );
@@ -36,6 +41,8 @@ router.post("/login", async (req, res) => {
       token,
       UserID: user.UserID,
       UserUsertypeID: user.UserUsertypeID,
+      UserFirstname: user.UserFirstname,
+      UserEmail: user.UserEmail,
     });
   } catch (error) {
     res.status(500).json({ message: `Login failed: ${error.message}` });
