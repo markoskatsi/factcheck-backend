@@ -20,6 +20,7 @@ import verdictstatusRouter from "./routers/verdictstatus-router.js";
 import disputetypesRouter from "./routers/disputetypes-router.js";
 import rolesRouter from "./routers/roles-router.js";
 import disputesRouter from "./routers/disputes-router.js";
+import feedbackRouter from "./routers/feedback-router.js";
 
 // Configure express app and multer-------------------
 const app = express();
@@ -61,6 +62,7 @@ app.use("/api/verdictstatus", validateJwt, verdictstatusRouter);
 app.use("/api/disputetypes", validateJwt, disputetypesRouter);
 app.use("/api/disputes", validateJwt, disputesRouter);
 app.use("/api/roles", validateJwt, rolesRouter);
+app.use("/api/feedback", validateJwt, feedbackRouter);
 
 // Start server ----------------------------
 const PORT = process.env.PORT || 5000;
