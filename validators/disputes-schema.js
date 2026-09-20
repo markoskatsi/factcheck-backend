@@ -12,7 +12,7 @@ schema.recordSchema = joi
   .object({
     DisputeID: joi.number().integer(),
     DisputeDescription: joi.string().min(20),
-    DisputeOutcome: joi.number().valid(0, 1),
+    DisputeOutcome: joi.number().valid(0, 1, 2),
     DisputeDisputetypeID: joi.number().integer(),
     DisputeVerdictID: joi.number().integer(),
   })
