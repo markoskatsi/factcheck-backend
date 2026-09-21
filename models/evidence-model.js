@@ -1,4 +1,4 @@
-import { parseRequestQuery, constructPreparedStatement } from "./utils.js";
+import { parseRequestQuery, constructPreparedStatement } from "../utils/query-builder.js";
 
 const model = {
   table: "Evidence",

@@ -35,7 +35,7 @@ export const constructPreparedStatement = (
   orderby = `${orderby ? `ORDER BY ${orderby}` : ""}`;
   let sql = `SELECT ${fields} FROM ${table} ${where} ${orderby}`;
   if (filter) {
-    // Filter fields are sometimes aliases which are not accesssible to the above SELECT where clause
+    
     sql = `SELECT * FROM ( ${sql} ) AS subquery WHERE ${filter.sql}`;
     parameters = Object.assign(parameters, filter.parameters);
   }

@@ -1,7 +1,7 @@
 import upload from "../middleware/upload.js";
 import { Router } from "express";
 import Validator from "../validators/Validator.js";
-import database from "../database.js";
+import database from "../config/database.js";
 import Model from "../models/Model.js";
 import modelConfig from "../models/sources-model.js";
 import Accessor from "../accessor/Accessor.js";

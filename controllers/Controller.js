@@ -1,4 +1,4 @@
-import cloudinary from "../utils/cloudinary.js";
+import cloudinary from "../config/cloudinary.js";
 
 class Controller {
   constructor(validator, accessor) {

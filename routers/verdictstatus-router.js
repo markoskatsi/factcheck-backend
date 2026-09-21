@@ -1,6 +1,6 @@
 import { Router } from "express";
 import Validator from "../validators/Validator.js";
-import database from "../database.js";
+import database from "../config/database.js";
 import Model from "../models/Model.js";
 import modelConfig from "../models/verdictstatus-model.js";
 import Accessor from "../accessor/Accessor.js";
