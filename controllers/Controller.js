@@ -1,4 +1,4 @@
-import cloudinary from "../config/cloudinary.js";
+import { fileFields } from "../utils/file-fields.js";
 
 class Controller {
   constructor(validator, accessor) {
@@ -25,24 +25,13 @@ class Controller {
   };
 
   post = async (req, res, variant) => {
-    if (req.file) {
-      try {
-        const uploadResult = await cloudinary.uploader.upload(req.file.path);
-        req.body[`${variant}Filename`] = req.file.originalname;
-        req.body[`${variant}Filepath`] = uploadResult.secure_url;
-        req.body[`${variant}Filetype`] = req.file.mimetype;
-        req.body[`${variant}Filesize`] = req.file.size;
-        req.body[`${variant}URL`] = null;
-      } catch (error) {
-        return res
-          .status(500)
-          .json({ message: `Cloudinary upload failed: ${error.message}` });
-      }
-    } else if (variant && req.body[`${variant}URL`]) {
-      req.body[`${variant}Filename`] = null;
-      req.body[`${variant}Filepath`] = null;
-      req.body[`${variant}Filetype`] = null;
-      req.body[`${variant}Filesize`] = null;
+    
+    try {
+      await fileFields(req, variant);
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: `Cloudinary upload failed: ${error.message}` });
     }
 
     const { isValid, message: validationMessage } = this.validator.post(
@@ -64,24 +53,12 @@ class Controller {
     const id = req.params.id;
     const record = req.body;
 
-    if (req.file) {
-      try {
-        const uploadResult = await cloudinary.uploader.upload(req.file.path);
-        req.body[`${variant}Filename`] = req.file.originalname;
-        req.body[`${variant}Filepath`] = uploadResult.secure_url;
-        req.body[`${variant}Filetype`] = req.file.mimetype;
-        req.body[`${variant}Filesize`] = req.file.size;
-        req.body[`${variant}URL`] = null;
-      } catch (error) {
-        return res
-          .status(500)
-          .json({ message: `Cloudinary upload failed: ${error.message}` });
-      }
-    } else if (record[`${variant}URL`]) {
-      req.body[`${variant}Filename`] = null;
-      req.body[`${variant}Filepath`] = null;
-      req.body[`${variant}Filetype`] = null;
-      req.body[`${variant}Filesize`] = null;
+    try {
+      await fileFields(req, variant);
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: `Cloudinary upload failed: ${error.message}` });
     }
 
     // Validate request
