@@ -8,7 +8,7 @@ export const fileFields = async (req, variant) => {
     req.body[`${variant}Filetype`] = req.file.mimetype;
     req.body[`${variant}Filesize`] = req.file.size;
     req.body[`${variant}URL`] = null;
-  } else if (variant && req.body[`${variant}URL`]) {
+  } else {
     req.body[`${variant}Filename`] = null;
     req.body[`${variant}Filepath`] = null;
     req.body[`${variant}Filetype`] = null;
